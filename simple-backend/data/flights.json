@@ -28,5 +28,50 @@
     "available_seats": "",
     "created_at": "2025-12-01T12:36:13.368Z",
     "is_active": true
+  },
+  {
+    "flight_id": "",
+    "airline_name": "",
+    "departure_airport": "",
+    "arrival_airport": "",
+    "departure_datetime": "",
+    "arrival_datetime": "",
+    "duration": "",
+    "flight_class": "Economy",
+    "ticket_price": "",
+    "total_seats": "",
+    "available_seats": "",
+    "created_at": "2025-12-01T12:42:52.577Z",
+    "is_active": true
+  },
+  {
+    "flight_id": "",
+    "airline_name": "",
+    "departure_airport": "",
+    "arrival_airport": "",
+    "departure_datetime": "",
+    "arrival_datetime": "",
+    "duration": "",
+    "flight_class": "Economy",
+    "ticket_price": "",
+    "total_seats": "",
+    "available_seats": "",
+    "created_at": "2025-12-01T12:43:16.105Z",
+    "is_active": true
+  },
+  {
+    "flight_id": "TSA-236",
+    "airline_name": "Test-Southwest",
+    "departure_airport": "SJC",
+    "arrival_airport": "SEA",
+    "departure_datetime": "2025-12-02T04:49",
+    "arrival_datetime": "2025-12-03T04:49",
+    "duration": "1440",
+    "flight_class": "Economy",
+    "ticket_price": "200",
+    "total_seats": "25",
+    "available_seats": "2",
+    "created_at": "2025-12-01T12:50:01.340Z",
+    "is_active": true
   }
 ]

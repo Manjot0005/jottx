@@ -34,6 +34,39 @@ import {
 } from '@mui/icons-material';
 import { listingsAPI } from '../services/api';
 
+// Airport code to city name mapping
+const AIRPORT_TO_CITY = {
+  'SJC': 'San Jose',
+  'SEA': 'Seattle',
+  'ORD': 'Chicago',
+  'JFK': 'New York',
+  'LGA': 'New York',
+  'EWR': 'New York',
+  'LAX': 'Los Angeles',
+  'MIA': 'Miami',
+  'BOS': 'Boston',
+  'DEN': 'Denver',
+  'ATL': 'Atlanta',
+  'PHX': 'Phoenix',
+  'DFW': 'Dallas',
+  'AUS': 'Austin',
+  'SFO': 'San Francisco',
+  'LAS': 'Las Vegas',
+  'MCO': 'Orlando',
+};
+
+// Helper to normalize airport codes or city names
+const normalizeCityOrAirport = (value) => {
+  if (!value) return '';
+  const upper = value.toUpperCase().trim();
+  // Check if it's an airport code
+  if (AIRPORT_TO_CITY[upper]) {
+    return AIRPORT_TO_CITY[upper].toLowerCase();
+  }
+  // Otherwise treat as city name
+  return value.toLowerCase().trim();
+};
+
 // Initialize flights data in localStorage if not exists
 const initializeFlightsData = () => {
   const stored = localStorage.getItem('flightsInventory');
@@ -183,12 +216,16 @@ const SearchResults = () => {
             const durationMins = f.duration || 120;
             const durationStr = `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`;
             
+            // Convert airport codes to city names for display
+            const fromCity = AIRPORT_TO_CITY[f.departure_airport?.toUpperCase()] || f.departure_airport;
+            const toCity = AIRPORT_TO_CITY[f.arrival_airport?.toUpperCase()] || f.arrival_airport;
+            
             return {
               id: f.flight_id,
               flightNumber: f.flight_id,
               airline: f.airline_name,
-              from: f.departure_airport,
-              to: f.arrival_airport,
+              from: fromCity,  // Now uses city name
+              to: toCity,      // Now uses city name
               departTime,
               arriveTime,
               duration: durationStr,
@@ -208,16 +245,27 @@ const SearchResults = () => {
           
           // Filter outbound flights by origin and destination
           filteredResults = allFlights.filter(f => {
-            const matchFrom = !fromCity || f.from.toLowerCase() === fromCity.toLowerCase();
-            const matchTo = !toCity || f.to.toLowerCase() === toCity.toLowerCase();
+            // Normalize both the flight data and search params to handle airport codes
+            const normalizedFlightFrom = normalizeCityOrAirport(f.from);
+            const normalizedFlightTo = normalizeCityOrAirport(f.to);
+            const normalizedSearchFrom = fromCity.toLowerCase();
+            const normalizedSearchTo = toCity.toLowerCase();
+            
+            const matchFrom = !fromCity || normalizedFlightFrom === normalizedSearchFrom;
+            const matchTo = !toCity || normalizedFlightTo === normalizedSearchTo;
             return matchFrom && matchTo;
           });
           
           // For round trip, also get return flights (destination → origin)
           if (tripType === 'roundtrip' && fromCity && toCity) {
             returnResults = allFlights.filter(f => {
-              const matchFrom = f.from.toLowerCase() === toCity.toLowerCase();
-              const matchTo = f.to.toLowerCase() === fromCity.toLowerCase();
+              const normalizedFlightFrom = normalizeCityOrAirport(f.from);
+              const normalizedFlightTo = normalizeCityOrAirport(f.to);
+              const normalizedSearchFrom = fromCity.toLowerCase();
+              const normalizedSearchTo = toCity.toLowerCase();
+              
+              const matchFrom = normalizedFlightFrom === normalizedSearchTo;
+              const matchTo = normalizedFlightTo === normalizedSearchFrom;
               return matchFrom && matchTo;
             });
             setReturnFlights(returnResults);
