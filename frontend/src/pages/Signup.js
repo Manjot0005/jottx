@@ -34,9 +34,8 @@ const Signup = () => {
     phone_number: '',
     address: '',
     city: '',
-    state: '',
+    state: 'CA',
     zip_code: '',
-    access_level: 'admin',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -55,9 +54,27 @@ const Signup = () => {
     setLoading(true);
     setError('');
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    // Client-side validation
+    if (!formData.admin_id || formData.admin_id.length < 3) {
+      setError('Admin ID must be at least 3 characters (e.g., ADM-004)');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.first_name || formData.first_name.length < 2) {
+      setError('First name must be at least 2 characters');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.last_name || formData.last_name.length < 2) {
+      setError('Last name must be at least 2 characters');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.email || !formData.email.includes('@')) {
+      setError('Please enter a valid email address');
       setLoading(false);
       return;
     }
@@ -68,8 +85,17 @@ const Signup = () => {
       return;
     }
 
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { confirmPassword, ...signupData } = formData;
+      // Always set access_level to 'admin' for new registrations
+      signupData.access_level = 'admin';
+      
       await axios.post('http://localhost:5001/api/admin/auth/register', signupData);
       
       setSuccess('Admin registered successfully! Redirecting to login...');
@@ -77,7 +103,13 @@ const Signup = () => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      const errorMsg = err.response?.data?.message || 'Registration failed';
+      const errors = err.response?.data?.errors;
+      if (errors && errors.length > 0) {
+        setError(errors.map(e => e.msg).join('. '));
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -122,10 +154,11 @@ const Signup = () => {
                   fullWidth
                   label="Admin ID"
                   name="admin_id"
-                  placeholder="ADM-003"
+                  placeholder="ADM-004"
                   value={formData.admin_id}
                   onChange={handleChange}
-                  helperText="Unique identifier (e.g., ADM-003)"
+                  helperText="Min 3 characters (e.g., ADM-004)"
+                  error={formData.admin_id.length > 0 && formData.admin_id.length < 3}
                 />
               </Grid>
 
@@ -149,6 +182,8 @@ const Signup = () => {
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
+                  helperText="Min 2 characters"
+                  error={formData.first_name.length > 0 && formData.first_name.length < 2}
                 />
               </Grid>
 
@@ -160,6 +195,8 @@ const Signup = () => {
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
+                  helperText="Min 2 characters"
+                  error={formData.last_name.length > 0 && formData.last_name.length < 2}
                 />
               </Grid>
 
@@ -173,6 +210,7 @@ const Signup = () => {
                   value={formData.password}
                   onChange={handleChange}
                   helperText="Min 6 characters"
+                  error={formData.password.length > 0 && formData.password.length < 6}
                 />
               </Grid>
 
@@ -185,10 +223,12 @@ const Signup = () => {
                   type="password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  error={formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword}
+                  helperText={formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword ? "Passwords don't match" : ""}
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Phone Number"
@@ -196,10 +236,11 @@ const Signup = () => {
                   placeholder="4151234567"
                   value={formData.phone_number}
                   onChange={handleChange}
+                  helperText="10 digits, no dashes"
                 />
               </Grid>
 
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Address"
@@ -228,7 +269,6 @@ const Signup = () => {
                   value={formData.state}
                   onChange={handleChange}
                 >
-                  <MenuItem value="">Select State</MenuItem>
                   {US_STATES.map((state) => (
                     <MenuItem key={state} value={state}>
                       {state}
@@ -242,25 +282,11 @@ const Signup = () => {
                   fullWidth
                   label="ZIP Code"
                   name="zip_code"
-                  placeholder="95110"
+                  placeholder="95112"
                   value={formData.zip_code}
                   onChange={handleChange}
+                  helperText="5 digits (e.g., 95112)"
                 />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Access Level"
-                  name="access_level"
-                  value={formData.access_level}
-                  onChange={handleChange}
-                >
-                  <MenuItem value="admin">Admin</MenuItem>
-                  <MenuItem value="manager">Manager</MenuItem>
-                  <MenuItem value="super_admin">Super Admin</MenuItem>
-                </TextField>
               </Grid>
 
               <Grid item xs={12}>
