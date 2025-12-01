@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -15,6 +15,7 @@ import {
   CardContent,
   Divider,
   Alert,
+  IconButton,
 } from '@mui/material';
 import {
   Flight,
@@ -23,26 +24,77 @@ import {
   Person,
   Payment,
   CheckCircle,
+  Add,
+  Remove,
+  Warning,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
 const steps = ['Traveler Info', 'Payment', 'Confirmation'];
 
-const mockItems = {
-  flights: { name: 'United Airlines', from: 'San Jose', to: 'New York', price: 299, date: 'Dec 15, 2025' },
-  hotels: { name: 'Grand Hyatt New York', location: 'New York, NY', price: 289, nights: 3 },
-  cars: { name: 'Toyota Camry', company: 'Hertz', price: 65, days: 3 },
-};
-
 const Booking = () => {
   const { type, id } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [confirmationNumber, setConfirmationNumber] = useState('');
+  const [bookingError, setBookingError] = useState('');
   
-  const item = mockItems[type] || mockItems.flights;
+  // Get booking data from localStorage or URL params
+  const storedBooking = JSON.parse(localStorage.getItem('currentBooking') || '{}');
+  const providerName = searchParams.get('provider') || storedBooking.selectedProvider?.name || 'Direct';
+  const providerPrice = parseInt(searchParams.get('price')) || storedBooking.selectedProvider?.price || 100;
+  const initialPassengers = parseInt(searchParams.get('passengers')) || storedBooking.passengers || 1;
+  
+  const [passengers, setPassengers] = useState(initialPassengers);
+  const [item, setItem] = useState(null);
+  const [availableSeats, setAvailableSeats] = useState(100);
+  
+  // Load item data from localStorage inventory
+  useEffect(() => {
+    if (type === 'flights') {
+      const flights = JSON.parse(localStorage.getItem('flightsInventory') || '[]');
+      const flight = flights.find(f => f.id === id);
+      if (flight) {
+        setItem(flight);
+        setAvailableSeats(flight.seatsAvailable);
+      } else if (storedBooking.id === id) {
+        setItem(storedBooking);
+        setAvailableSeats(storedBooking.seatsAvailable || 50);
+      }
+    } else if (type === 'hotels') {
+      const hotels = JSON.parse(localStorage.getItem('hotelsInventory') || '[]');
+      const hotel = hotels.find(h => h.id === id);
+      if (hotel) {
+        setItem(hotel);
+        setAvailableSeats(hotel.roomsAvailable);
+      } else if (storedBooking.id === id) {
+        setItem(storedBooking);
+      }
+    } else if (type === 'cars') {
+      const cars = JSON.parse(localStorage.getItem('carsInventory') || '[]');
+      const car = cars.find(c => c.id === id);
+      if (car) {
+        setItem(car);
+        setAvailableSeats(car.carsAvailable);
+      } else if (storedBooking.id === id) {
+        setItem(storedBooking);
+      }
+    }
+  }, [type, id]);
+
+  // Additional travelers state
+  const [additionalTravelers, setAdditionalTravelers] = useState([]);
+  
+  useEffect(() => {
+    const newTravelers = [];
+    for (let i = 1; i < passengers; i++) {
+      newTravelers.push(additionalTravelers[i-1] || { firstName: '', lastName: '', email: '' });
+    }
+    setAdditionalTravelers(newTravelers);
+  }, [passengers]);
 
   const [travelerInfo, setTravelerInfo] = useState({
     firstName: user?.first_name || '',
@@ -85,6 +137,11 @@ const Booking = () => {
     if (!travelerInfo.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!travelerInfo.email.includes('@')) newErrors.email = 'Valid email is required';
     if (!validatePhone(travelerInfo.phone)) newErrors.phone = 'Phone must be 10 digits';
+    // Validate additional travelers
+    additionalTravelers.forEach((t, idx) => {
+      if (!t.firstName.trim()) newErrors[`t${idx}fn`] = 'Required';
+      if (!t.lastName.trim()) newErrors[`t${idx}ln`] = 'Required';
+    });
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -92,14 +149,36 @@ const Booking = () => {
   const validateStep2 = () => {
     const newErrors = {};
     if (paymentInfo.cardNumber.replace(/\s/g, '').length < 16) newErrors.cardNumber = 'Enter valid card number';
-    if (!paymentInfo.expiry.match(/^\d{2}\/\d{2}$/)) newErrors.expiry = 'Use MM/YY format';
+    if (!paymentInfo.expiry.match(/^\d{2}\/\d{2}$/)) {
+      newErrors.expiry = 'Use MM/YY format';
+    } else {
+      const [month] = paymentInfo.expiry.split('/');
+      if (parseInt(month) < 1 || parseInt(month) > 12) newErrors.expiry = 'Month must be 01-12';
+    }
     if (paymentInfo.cvv.length < 3) newErrors.cvv = 'Enter valid CVV';
     if (!paymentInfo.nameOnCard.trim()) newErrors.nameOnCard = 'Name on card is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const updateInventory = () => {
+    if (type === 'flights') {
+      const flights = JSON.parse(localStorage.getItem('flightsInventory') || '[]');
+      const updated = flights.map(f => f.id === id ? { ...f, seatsAvailable: f.seatsAvailable - passengers } : f);
+      localStorage.setItem('flightsInventory', JSON.stringify(updated));
+    } else if (type === 'hotels') {
+      const hotels = JSON.parse(localStorage.getItem('hotelsInventory') || '[]');
+      const updated = hotels.map(h => h.id === id ? { ...h, roomsAvailable: h.roomsAvailable - 1 } : h);
+      localStorage.setItem('hotelsInventory', JSON.stringify(updated));
+    } else {
+      const cars = JSON.parse(localStorage.getItem('carsInventory') || '[]');
+      const updated = cars.map(c => c.id === id ? { ...c, carsAvailable: c.carsAvailable - 1 } : c);
+      localStorage.setItem('carsInventory', JSON.stringify(updated));
+    }
+  };
+
   const handleNext = () => {
+    setBookingError('');
     if (activeStep === 0 && !validateStep1()) return;
     if (activeStep === 1) {
       if (!validateStep2()) return;
@@ -119,37 +198,51 @@ const Booking = () => {
   };
 
   const handleConfirm = () => {
+    // Check availability before confirming
+    if (type === 'flights') {
+      const flights = JSON.parse(localStorage.getItem('flightsInventory') || '[]');
+      const flight = flights.find(f => f.id === id);
+      if (flight && flight.seatsAvailable < passengers) {
+        setBookingError(`Only ${flight.seatsAvailable} seats available. Please reduce passengers.`);
+        return;
+      }
+    }
+    
     setLoading(true);
     
     setTimeout(() => {
-      // Generate confirmation number
       const confNum = 'BK' + Date.now().toString().slice(-8);
       setConfirmationNumber(confNum);
+      
+      // Reduce inventory
+      updateInventory();
 
       // Create booking record
       const booking = {
         id: 'booking-' + Date.now(),
         confirmationNumber: confNum,
         type: type,
-        name: item.name,
-        from: item.from,
-        to: item.to,
-        location: item.location,
-        company: item.company,
+        itemId: id,
+        name: item?.name || item?.airline || item?.type,
+        flightNumber: item?.flightNumber,
+        from: item?.from,
+        to: item?.to,
+        location: item?.location,
+        model: item?.model,
+        provider: providerName,
         date: new Date().toISOString(),
-        price: item.price,
-        totalPrice: getTotalPrice() + Math.round(getTotalPrice() * 0.1),
+        pricePerUnit: providerPrice,
+        passengers: passengers,
+        totalPrice: getTotalPrice(),
         status: 'confirmed',
-        traveler: {
-          firstName: travelerInfo.firstName,
-          lastName: travelerInfo.lastName,
-          email: travelerInfo.email,
-          phone: travelerInfo.phone,
-        },
+        travelers: [
+          { ...travelerInfo, isPrimary: true },
+          ...additionalTravelers.map(t => ({ ...t, isPrimary: false }))
+        ],
         createdAt: new Date().toISOString(),
       };
 
-      // Save to user's bookings
+      // Save to user's bookings (isolated by user_id)
       const allBookings = JSON.parse(localStorage.getItem('userBookings') || '{}');
       if (!allBookings[user.user_id]) {
         allBookings[user.user_id] = [];
@@ -168,11 +261,29 @@ const Booking = () => {
     return <DirectionsCar sx={{ fontSize: 40, color: 'primary.main' }} />;
   };
 
-  const getTotalPrice = () => {
-    if (type === 'hotels') return item.price * item.nights;
-    if (type === 'cars') return item.price * item.days;
-    return item.price;
+  const getSubtotal = () => {
+    if (type === 'flights') return providerPrice * passengers;
+    return providerPrice;
   };
+
+  const getTotalPrice = () => {
+    const subtotal = getSubtotal();
+    return subtotal + Math.round(subtotal * 0.1);
+  };
+
+  const updateAdditionalTraveler = (idx, field, value) => {
+    const updated = [...additionalTravelers];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setAdditionalTravelers(updated);
+  };
+
+  if (!item) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+        <Typography>Loading booking details...</Typography>
+      </Container>
+    );
+  }
 
   const formatCardNumber = (value) => {
     const digits = value.replace(/\D/g, '').slice(0, 16);
@@ -199,6 +310,12 @@ const Booking = () => {
           Complete Your Booking
         </Typography>
 
+        {bookingError && (
+          <Alert severity="error" sx={{ mb: 3 }} icon={<Warning />}>
+            {bookingError}
+          </Alert>
+        )}
+
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
           {steps.map((label) => (
             <Step key={label}>
@@ -214,61 +331,67 @@ const Booking = () => {
               {/* Step 1: Traveler Info */}
               {activeStep === 0 && (
                 <>
+                  {/* Passenger Count for Flights */}
+                  {type === 'flights' && (
+                    <Box sx={{ mb: 4, p: 2, bgcolor: 'grey.100', borderRadius: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography variant="h6" fontWeight={600}>Passengers</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <IconButton onClick={() => setPassengers(Math.max(1, passengers - 1))} disabled={passengers <= 1} color="primary">
+                            <Remove />
+                          </IconButton>
+                          <Typography variant="h5" fontWeight={600}>{passengers}</Typography>
+                          <IconButton onClick={() => setPassengers(passengers + 1)} disabled={passengers >= availableSeats || passengers >= 9} color="primary">
+                            <Add />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {availableSeats} seats available
+                      </Typography>
+                      {passengers > availableSeats && (
+                        <Alert severity="error" sx={{ mt: 1 }}>Not enough seats!</Alert>
+                      )}
+                    </Box>
+                  )}
+
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                     <Person color="primary" />
-                    <Typography variant="h6" fontWeight={600}>Traveler Information</Typography>
+                    <Typography variant="h6" fontWeight={600}>Primary Traveler</Typography>
                   </Box>
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <TextField
-                        fullWidth
-                        label="First Name"
-                        value={travelerInfo.firstName}
-                        onChange={(e) => setTravelerInfo({ ...travelerInfo, firstName: e.target.value })}
-                        required
-                        error={!!errors.firstName}
-                        helperText={errors.firstName}
-                      />
+                      <TextField fullWidth label="First Name" value={travelerInfo.firstName} onChange={(e) => setTravelerInfo({ ...travelerInfo, firstName: e.target.value })} required error={!!errors.firstName} helperText={errors.firstName} />
                     </Grid>
                     <Grid item xs={6}>
-                      <TextField
-                        fullWidth
-                        label="Last Name"
-                        value={travelerInfo.lastName}
-                        onChange={(e) => setTravelerInfo({ ...travelerInfo, lastName: e.target.value })}
-                        required
-                        error={!!errors.lastName}
-                        helperText={errors.lastName}
-                      />
+                      <TextField fullWidth label="Last Name" value={travelerInfo.lastName} onChange={(e) => setTravelerInfo({ ...travelerInfo, lastName: e.target.value })} required error={!!errors.lastName} helperText={errors.lastName} />
                     </Grid>
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Email"
-                        type="email"
-                        value={travelerInfo.email}
-                        onChange={(e) => setTravelerInfo({ ...travelerInfo, email: e.target.value })}
-                        required
-                        error={!!errors.email}
-                        helperText={errors.email}
-                      />
+                      <TextField fullWidth label="Email" type="email" value={travelerInfo.email} onChange={(e) => setTravelerInfo({ ...travelerInfo, email: e.target.value })} required error={!!errors.email} helperText={errors.email} />
                     </Grid>
                     <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Phone Number"
-                        value={travelerInfo.phone}
-                        onChange={(e) => {
-                          const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-                          setTravelerInfo({ ...travelerInfo, phone: digits });
-                        }}
-                        required
-                        error={!!errors.phone}
-                        helperText={errors.phone || 'Must be 10 digits'}
-                        placeholder="5551234567"
-                      />
+                      <TextField fullWidth label="Phone Number" value={travelerInfo.phone} onChange={(e) => setTravelerInfo({ ...travelerInfo, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} required error={!!errors.phone} helperText={errors.phone || '10 digits'} />
                     </Grid>
                   </Grid>
+                  
+                  {/* Additional Travelers */}
+                  {additionalTravelers.map((t, idx) => (
+                    <Box key={idx} sx={{ mt: 4 }}>
+                      <Divider sx={{ mb: 3 }} />
+                      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Passenger {idx + 2}</Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <TextField fullWidth label="First Name" value={t.firstName} onChange={(e) => updateAdditionalTraveler(idx, 'firstName', e.target.value)} required error={!!errors[`t${idx}fn`]} />
+                        </Grid>
+                        <Grid item xs={6}>
+                          <TextField fullWidth label="Last Name" value={t.lastName} onChange={(e) => updateAdditionalTraveler(idx, 'lastName', e.target.value)} required error={!!errors[`t${idx}ln`]} />
+                        </Grid>
+                        <Grid item xs={12}>
+                          <TextField fullWidth label="Email (optional)" value={t.email} onChange={(e) => updateAdditionalTraveler(idx, 'email', e.target.value)} />
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  ))}
                 </>
               )}
 
@@ -368,12 +491,12 @@ const Booking = () => {
                 <Button
                   variant="contained"
                   onClick={handleNext}
-                  disabled={loading}
+                  disabled={loading || (type === 'flights' && passengers > availableSeats)}
                 >
                   {loading 
                     ? 'Processing...' 
                     : activeStep === 1 
-                      ? `Pay $${getTotalPrice() + Math.round(getTotalPrice() * 0.1)}` 
+                      ? `Pay $${getTotalPrice()}` 
                       : activeStep === steps.length - 1 
                         ? 'View My Bookings' 
                         : 'Continue'
@@ -389,54 +512,68 @@ const Booking = () => {
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                   {getIcon()}
-                  <Typography variant="h6" fontWeight={600}>
-                    {item.name}
-                  </Typography>
+                  <Box>
+                    <Typography variant="h6" fontWeight={600}>
+                      {item?.name || item?.airline || item?.type}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">via {providerName}</Typography>
+                  </Box>
                 </Box>
                 <Divider sx={{ my: 2 }} />
                 
                 {type === 'flights' && (
                   <>
+                    <Typography color="text.secondary">Flight</Typography>
+                    <Typography fontWeight={500} gutterBottom>{item?.flightNumber}</Typography>
                     <Typography color="text.secondary">Route</Typography>
-                    <Typography fontWeight={500} gutterBottom>{item.from} → {item.to}</Typography>
-                    <Typography color="text.secondary">Date</Typography>
-                    <Typography fontWeight={500} gutterBottom>{item.date}</Typography>
+                    <Typography fontWeight={500} gutterBottom>{item?.from} → {item?.to}</Typography>
+                    <Typography color="text.secondary">Passengers</Typography>
+                    <Typography fontWeight={500} gutterBottom>{passengers}</Typography>
+                    <Typography color="text.secondary">Seats After Booking</Typography>
+                    <Typography fontWeight={500} color={availableSeats - passengers > 10 ? 'success.main' : 'warning.main'} gutterBottom>{availableSeats - passengers}</Typography>
                   </>
                 )}
                 
                 {type === 'hotels' && (
                   <>
                     <Typography color="text.secondary">Location</Typography>
-                    <Typography fontWeight={500} gutterBottom>{item.location}</Typography>
-                    <Typography color="text.secondary">Duration</Typography>
-                    <Typography fontWeight={500} gutterBottom>{item.nights} nights</Typography>
+                    <Typography fontWeight={500} gutterBottom>{item?.location}</Typography>
+                    <Typography color="text.secondary">Rooms Available</Typography>
+                    <Typography fontWeight={500} gutterBottom>{item?.roomsAvailable}</Typography>
                   </>
                 )}
                 
                 {type === 'cars' && (
                   <>
-                    <Typography color="text.secondary">Rental Company</Typography>
-                    <Typography fontWeight={500} gutterBottom>{item.company}</Typography>
-                    <Typography color="text.secondary">Duration</Typography>
-                    <Typography fontWeight={500} gutterBottom>{item.days} days</Typography>
+                    <Typography color="text.secondary">Vehicle</Typography>
+                    <Typography fontWeight={500} gutterBottom>{item?.model}</Typography>
+                    <Typography color="text.secondary">Available</Typography>
+                    <Typography fontWeight={500} gutterBottom>{item?.carsAvailable}</Typography>
                   </>
                 )}
 
                 <Divider sx={{ my: 2 }} />
                 
+                {type === 'flights' ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography>${providerPrice} × {passengers}</Typography>
+                    <Typography>${providerPrice * passengers}</Typography>
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography>Subtotal</Typography>
+                    <Typography>${providerPrice}</Typography>
+                  </Box>
+                )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography>Subtotal</Typography>
-                  <Typography>${getTotalPrice()}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography>Taxes & Fees</Typography>
-                  <Typography>${Math.round(getTotalPrice() * 0.1)}</Typography>
+                  <Typography>Taxes & Fees (10%)</Typography>
+                  <Typography>${Math.round(getSubtotal() * 0.1)}</Typography>
                 </Box>
                 <Divider sx={{ my: 2 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="h6" fontWeight={600}>Total</Typography>
                   <Typography variant="h6" fontWeight={600} color="primary.main">
-                    ${getTotalPrice() + Math.round(getTotalPrice() * 0.1)}
+                    ${getTotalPrice()}
                   </Typography>
                 </Box>
               </CardContent>
