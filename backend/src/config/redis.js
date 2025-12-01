@@ -1,12 +1,28 @@
 const redis = require('redis');
 require('dotenv').config();
 
-// Redis Client Configuration
+// Redis Client Configuration - v4+ compatible
+const redisHost = process.env.REDIS_HOST || 'localhost';
+const redisPort = process.env.REDIS_PORT || 6379;
+const redisPassword = process.env.REDIS_PASSWORD;
+
+const redisUrl = redisPassword 
+  ? `redis://:${redisPassword}@${redisHost}:${redisPort}`
+  : `redis://${redisHost}:${redisPort}`;
+
+console.log(`🔧 Redis connecting to: ${redisHost}:${redisPort}`);
+
 const redisClient = redis.createClient({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: process.env.REDIS_PORT || 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
-  legacyMode: false
+  url: redisUrl,
+  socket: {
+    reconnectStrategy: (retries) => {
+      if (retries > 10) {
+        console.error('Redis: Too many reconnection attempts');
+        return new Error('Too many retries');
+      }
+      return Math.min(retries * 100, 3000);
+    }
+  }
 });
 
 // Error handling
