@@ -278,30 +278,37 @@ const SearchResults = () => {
           const backendHotels = backendResponse.data.data || [];
           
           // Convert backend format to traveler format
-          const formattedBackendHotels = backendHotels.map(h => ({
-            id: h.hotel_id,
-            name: h.hotel_name,
-            city: h.city,
-            location: `${h.city}, ${h.state}`,
-            rating: parseFloat(h.star_rating) || 4,
-            reviews: Math.floor(Math.random() * 1000) + 100,
-            stars: parseInt(h.star_rating) || 4,
-            roomsAvailable: h.available_rooms || h.total_rooms || 0,
-            amenities: h.amenities || [],
-            providers: [
-              { name: 'Booking.com', price: parseFloat(h.price_per_night) || 100 },
-              { name: 'Hotels.com', price: Math.round((parseFloat(h.price_per_night) || 100) * 1.05) },
-              { name: 'Expedia', price: Math.round((parseFloat(h.price_per_night) || 100) * 1.1) },
-            ],
-          }));
+          const formattedBackendHotels = backendHotels.map(h => {
+            // Convert airport codes to city names for display
+            const cityName = AIRPORT_TO_CITY[h.city?.toUpperCase()] || h.city;
+            
+            return {
+              id: h.hotel_id,
+              name: h.hotel_name,
+              city: cityName,  // Now uses city name
+              location: `${cityName}, ${h.state}`,
+              rating: parseFloat(h.star_rating) || 4,
+              reviews: Math.floor(Math.random() * 1000) + 100,
+              stars: parseInt(h.star_rating) || 4,
+              roomsAvailable: h.available_rooms || h.total_rooms || 0,
+              amenities: h.amenities || [],
+              providers: [
+                { name: 'Booking.com', price: parseFloat(h.price_per_night) || 100 },
+                { name: 'Hotels.com', price: Math.round((parseFloat(h.price_per_night) || 100) * 1.05) },
+                { name: 'Expedia', price: Math.round((parseFloat(h.price_per_night) || 100) * 1.1) },
+              ],
+            };
+          });
           
           // Get mock data and merge
           const mockHotels = initializeHotelsData();
           const allHotels = [...formattedBackendHotels, ...mockHotels];
           
-          // Filter by city
+          // Filter by city (handle both airport codes and city names)
           filteredResults = allHotels.filter(h => {
-            return !toCity || h.city.toLowerCase() === toCity.toLowerCase();
+            const normalizedHotelCity = normalizeCityOrAirport(h.city);
+            const normalizedSearchCity = toCity.toLowerCase();
+            return !toCity || normalizedHotelCity === normalizedSearchCity;
           });
         } else if (type === 'cars') {
           // Fetch from backend API
@@ -309,29 +316,37 @@ const SearchResults = () => {
           const backendCars = backendResponse.data.data || [];
           
           // Convert backend format to traveler format
-          const formattedBackendCars = backendCars.map(c => ({
-            id: c.car_id,
-            type: c.car_type,
-            model: `${c.model} ${c.year || ''}`.trim(),
-            passengerCapacity: parseInt(c.seats) || 5,
-            bags: Math.ceil((parseInt(c.seats) || 5) / 2),
-            transmission: c.transmission_type || 'Automatic',
-            carsAvailable: c.availability_status === 'AVAILABLE' ? 10 : 0,
-            cities: ['New York', 'Los Angeles', 'Chicago', 'Miami', 'San Francisco', 'Denver', 'Seattle'],
-            providers: [
-              { name: c.company_name, price: parseFloat(c.daily_rental_price) || 50 },
-              { name: 'Enterprise', price: Math.round((parseFloat(c.daily_rental_price) || 50) * 1.05) },
-              { name: 'Budget', price: Math.round((parseFloat(c.daily_rental_price) || 50) * 0.95) },
-            ],
-          }));
+          const formattedBackendCars = backendCars.map(c => {
+            // Convert location if it's an airport code
+            const locationCity = c.location ? (AIRPORT_TO_CITY[c.location.toUpperCase()] || c.location) : 'San Jose';
+            
+            return {
+              id: c.car_id,
+              type: c.car_type,
+              model: `${c.model} ${c.year || ''}`.trim(),
+              passengerCapacity: parseInt(c.seats) || 5,
+              bags: Math.ceil((parseInt(c.seats) || 5) / 2),
+              transmission: c.transmission_type || 'Automatic',
+              carsAvailable: c.availability_status === 'AVAILABLE' ? 10 : 0,
+              location: locationCity,
+              cities: [locationCity, 'New York', 'Los Angeles', 'Chicago', 'Miami', 'San Francisco', 'Denver', 'Seattle'],
+              providers: [
+                { name: c.company_name, price: parseFloat(c.daily_rental_price) || 50 },
+                { name: 'Enterprise', price: Math.round((parseFloat(c.daily_rental_price) || 50) * 1.05) },
+                { name: 'Budget', price: Math.round((parseFloat(c.daily_rental_price) || 50) * 0.95) },
+              ],
+            };
+          });
           
           // Get mock data and merge
           const mockCars = initializeCarsData();
           const allCars = [...formattedBackendCars, ...mockCars];
           
-          // Filter by pickup city
+          // Filter by pickup city (handle both airport codes and city names)
           filteredResults = allCars.filter(c => {
-            return !pickupCity || c.cities.some(city => city.toLowerCase() === pickupCity.toLowerCase());
+            if (!pickupCity) return true;
+            const normalizedSearchCity = normalizeCityOrAirport(pickupCity);
+            return c.cities.some(city => normalizeCityOrAirport(city) === normalizedSearchCity);
           });
         }
         

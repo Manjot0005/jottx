@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "car_id": "AB-12",
+    "car_type": "Economy",
+    "company_name": "Toyota",
+    "model": "Prius",
+    "year": "2025",
+    "transmission_type": "Automatic",
+    "seats": "5",
+    "daily_rental_price": "120",
+    "availability_status": "AVAILABLE",
+    "created_at": "2025-12-01T13:06:28.080Z",
+    "is_active": true
+  }
+]
