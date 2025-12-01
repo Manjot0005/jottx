@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { Login as LoginIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
-import { authAPI } from '../services/api';
+// import { authAPI } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -45,8 +45,8 @@ const Login = () => {
     }
 
     try {
-      // Try API login first
-      const response = await authAPI.login(formData);
+      // Try API login first (disabled for now - using localStorage)
+      // const response = await authAPI.login(formData);
       const { user, token } = response.data.data;
       login(user, token);
       navigate('/');

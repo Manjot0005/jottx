@@ -166,9 +166,10 @@ const SearchResults = () => {
       setLoading(true);
       setNoResults(false);
       
+      let filteredResults = [];
+      let returnResults = [];
+      
       try {
-        let filteredResults = [];
-        let returnResults = [];
         
         if (type === 'flights') {
           // Fetch from backend API
