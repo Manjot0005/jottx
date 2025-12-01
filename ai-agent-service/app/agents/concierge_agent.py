@@ -77,6 +77,8 @@ class ConciergeAgent:
         # Detect query type
         if any(word in message_lower for word in ['track', 'watch', 'alert', 'notify']):
             intent['query_type'] = 'watch'
+        elif any(word in message_lower for word in ['booking', 'bookings', 'my trips', 'reservations', 'my reservation']):
+            intent['query_type'] = 'bookings_lookup'
         elif any(word in message_lower for word in ['is it good', 'worth it', 'actually good', 'compare']):
             intent['query_type'] = 'policy_question'
         elif session and (session.origin or session.destination):
@@ -149,11 +151,15 @@ class ConciergeAgent:
         
         return intent
     
-    def get_clarifying_question(self, intent: Dict[str, Any]) -> Optional[str]:
+    def get_clarifying_question(self, intent: Dict[str, Any], query_type: str) -> Optional[str]:
         """
         Return a clarifying question if critical info is missing.
-        Only ask ONE question max.
+        Only ask ONE question max. Skip for non-search queries.
         """
+        # Don't ask clarifying questions for bookings lookup or other queries
+        if query_type != 'search':
+            return None
+            
         if not intent.get('departure_date'):
             return "When would you like to travel? (e.g., Oct 25-27)"
         
@@ -461,21 +467,24 @@ class ConciergeAgent:
         # Parse intent
         intent = self.parse_intent(request.message, chat_session)
         
-        # Check if we need clarification
-        clarifying = self.get_clarifying_question(intent)
-        if clarifying and intent['query_type'] == 'search':
+        # Handle different query types
+        if intent['query_type'] == 'watch':
+            return await self._handle_watch_request(request.message, session_id)
+        
+        if intent['query_type'] == 'bookings_lookup':
+            return self._handle_bookings_lookup(request.message, session_id)
+        
+        if intent['query_type'] == 'policy_question':
+            return self._handle_policy_question(request.message, session_id)
+        
+        # Check if we need clarification (only for search queries)
+        clarifying = self.get_clarifying_question(intent, intent['query_type'])
+        if clarifying:
             return ChatResponse(
                 message="I'd love to help you find the perfect trip!",
                 clarifying_question=clarifying,
                 session_id=session_id
             )
-        
-        # Handle different query types
-        if intent['query_type'] == 'watch':
-            return await self._handle_watch_request(request.message, session_id)
-        
-        if intent['query_type'] == 'policy_question':
-            return self._handle_policy_question(request.message, session_id)
         
         # Search for bundles
         bundles = self.find_bundles(intent)
@@ -562,6 +571,13 @@ class ConciergeAgent:
         return ChatResponse(
             message=f"I'll keep an eye on that! I'll alert you when: {' or '.join(conditions)}.",
             action_taken=f"Created watch {watch_id}",
+            session_id=session_id
+        )
+    
+    def _handle_bookings_lookup(self, message: str, session_id: str) -> ChatResponse:
+        """Handle requests to look up user's bookings"""
+        return ChatResponse(
+            message="To view your bookings, please go to 'My Trips' in the navigation menu or visit the My Bookings page. Your bookings are stored securely in your account and can be accessed after logging in.\n\nI can help you search for new flights, hotels, or car rentals. Just tell me where you'd like to go!",
             session_id=session_id
         )
     

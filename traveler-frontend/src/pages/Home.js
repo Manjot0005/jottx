@@ -204,7 +204,8 @@ const Home = () => {
                     <DatePicker
                       label="Depart"
                       value={flightSearch.departDate}
-                      onChange={(date) => setFlightSearch({ ...flightSearch, departDate: date })}
+                      onChange={(date) => setFlightSearch({ ...flightSearch, departDate: date, returnDate: flightSearch.returnDate && date > flightSearch.returnDate ? null : flightSearch.returnDate })}
+                      minDate={new Date()}
                       slotProps={{ textField: { fullWidth: true } }}
                     />
                   </Grid>
@@ -213,7 +214,9 @@ const Home = () => {
                       label="Return"
                       value={flightSearch.returnDate}
                       onChange={(date) => setFlightSearch({ ...flightSearch, returnDate: date })}
-                      slotProps={{ textField: { fullWidth: true } }}
+                      minDate={flightSearch.departDate || new Date()}
+                      disabled={!flightSearch.departDate}
+                      slotProps={{ textField: { fullWidth: true, helperText: !flightSearch.departDate ? 'Select departure first' : '' } }}
                     />
                   </Grid>
                   <Grid item xs={12} md={2}>
@@ -256,7 +259,8 @@ const Home = () => {
                     <DatePicker
                       label="Check-in"
                       value={hotelSearch.checkIn}
-                      onChange={(date) => setHotelSearch({ ...hotelSearch, checkIn: date })}
+                      onChange={(date) => setHotelSearch({ ...hotelSearch, checkIn: date, checkOut: hotelSearch.checkOut && date > hotelSearch.checkOut ? null : hotelSearch.checkOut })}
+                      minDate={new Date()}
                       slotProps={{ textField: { fullWidth: true } }}
                     />
                   </Grid>
@@ -265,7 +269,9 @@ const Home = () => {
                       label="Check-out"
                       value={hotelSearch.checkOut}
                       onChange={(date) => setHotelSearch({ ...hotelSearch, checkOut: date })}
-                      slotProps={{ textField: { fullWidth: true } }}
+                      minDate={hotelSearch.checkIn || new Date()}
+                      disabled={!hotelSearch.checkIn}
+                      slotProps={{ textField: { fullWidth: true, helperText: !hotelSearch.checkIn ? 'Select check-in first' : '' } }}
                     />
                   </Grid>
                   <Grid item xs={6} md={2}>
@@ -336,7 +342,8 @@ const Home = () => {
                     <DatePicker
                       label="Pick-up Date"
                       value={carSearch.pickupDate}
-                      onChange={(date) => setCarSearch({ ...carSearch, pickupDate: date })}
+                      onChange={(date) => setCarSearch({ ...carSearch, pickupDate: date, dropoffDate: carSearch.dropoffDate && date > carSearch.dropoffDate ? null : carSearch.dropoffDate })}
+                      minDate={new Date()}
                       slotProps={{ textField: { fullWidth: true } }}
                     />
                   </Grid>
@@ -345,7 +352,9 @@ const Home = () => {
                       label="Drop-off Date"
                       value={carSearch.dropoffDate}
                       onChange={(date) => setCarSearch({ ...carSearch, dropoffDate: date })}
-                      slotProps={{ textField: { fullWidth: true } }}
+                      minDate={carSearch.pickupDate || new Date()}
+                      disabled={!carSearch.pickupDate}
+                      slotProps={{ textField: { fullWidth: true, helperText: !carSearch.pickupDate ? 'Select pickup first' : '' } }}
                     />
                   </Grid>
                   <Grid item xs={12} md={2}>

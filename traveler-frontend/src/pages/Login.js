@@ -8,9 +8,8 @@ import {
   Typography,
   Box,
   Alert,
-  Divider,
 } from '@mui/material';
-import { Login as LoginIcon, Google, Facebook } from '@mui/icons-material';
+import { Login as LoginIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 
@@ -127,17 +126,6 @@ const Login = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
-          <Divider sx={{ my: 3 }}>or continue with</Divider>
-
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button fullWidth variant="outlined" startIcon={<Google />}>
-              Google
-            </Button>
-            <Button fullWidth variant="outlined" startIcon={<Facebook />}>
-              Facebook
-            </Button>
-          </Box>
 
           <Typography align="center" sx={{ mt: 3 }}>
             Don't have an account?{' '}

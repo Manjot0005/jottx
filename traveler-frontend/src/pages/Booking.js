@@ -182,7 +182,12 @@ const Booking = () => {
   const formatExpiry = (value) => {
     const digits = value.replace(/\D/g, '').slice(0, 4);
     if (digits.length >= 2) {
-      return digits.slice(0, 2) + '/' + digits.slice(2);
+      // Validate month (01-12)
+      let month = parseInt(digits.slice(0, 2));
+      if (month < 1) month = '01';
+      else if (month > 12) month = '12';
+      else month = digits.slice(0, 2);
+      return month + '/' + digits.slice(2);
     }
     return digits;
   };
