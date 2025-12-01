@@ -1,0 +1,34 @@
+# FastAPI and ASGI
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+websockets==12.0
+
+# Pydantic v2 and SQLModel
+pydantic==2.5.3
+pydantic-settings==2.1.0
+sqlmodel==0.0.14
+
+# Database
+aiosqlite==0.19.0
+
+# Kafka
+aiokafka==0.10.0
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.3
+
+# HTTP client
+httpx==0.26.0
+
+# Scheduling
+apscheduler==3.10.4
+
+# Utils
+python-dotenv==1.0.0
+python-multipart==0.0.6
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+

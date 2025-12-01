@@ -19,6 +19,7 @@ import MyBookings from './pages/MyBookings';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
+import AIAssistant from './pages/AIAssistant';
 
 // Theme
 const theme = createTheme({
@@ -107,6 +108,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/ai-assistant" element={<AIAssistant />} />
               </Routes>
             </main>
             <Footer />

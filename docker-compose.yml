@@ -218,6 +218,31 @@ services:
       timeout: 10s
       retries: 3
 
+  # AI Agent Service
+  ai-agent:
+    build:
+      context: ./ai-agent-service
+      dockerfile: Dockerfile
+    container_name: kayak-ai-agent
+    restart: unless-stopped
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - DATABASE_URL=sqlite:///./data/kayak_ai.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ai_agent_data:/app/data
+    networks:
+      - kayak-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 # ============================================
 # NETWORKS
 # ============================================
@@ -243,5 +268,7 @@ volumes:
   zookeeper_log:
     driver: local
   kafka_data:
+    driver: local
+  ai_agent_data:
     driver: local
 

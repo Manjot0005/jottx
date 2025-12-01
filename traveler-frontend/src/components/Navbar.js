@@ -19,6 +19,7 @@ import {
   Person,
   Logout,
   BookOnline,
+  SmartToy,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
@@ -85,6 +86,18 @@ const Navbar = () => {
             sx={{ color: 'text.secondary' }}
           >
             Cars
+          </Button>
+          <Button
+            component={Link}
+            to="/ai-assistant"
+            startIcon={<SmartToy />}
+            sx={{ 
+              color: 'white',
+              bgcolor: 'primary.main',
+              '&:hover': { bgcolor: 'primary.dark' }
+            }}
+          >
+            AI Concierge
           </Button>
         </Box>
 
