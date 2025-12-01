@@ -1,6 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authAPI } from '../services/api';
-import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
@@ -12,6 +10,34 @@ export const useAuth = () => {
   return context;
 };
 
+// Demo admin accounts
+const DEMO_ADMINS = [
+  {
+    email: 'superadmin@kayak.com',
+    password: 'Admin@123',
+    admin_id: 'ADM-001',
+    first_name: 'Super',
+    last_name: 'Admin',
+    access_level: 'super_admin'
+  },
+  {
+    email: 'admin@kayak.com',
+    password: 'Admin@123',
+    admin_id: 'ADM-002',
+    first_name: 'Admin',
+    last_name: 'User',
+    access_level: 'admin'
+  },
+  {
+    email: 'manager@kayak.com',
+    password: 'Admin@123',
+    admin_id: 'ADM-003',
+    first_name: 'Manager',
+    last_name: 'User',
+    access_level: 'manager'
+  }
+];
+
 export const AuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,15 +46,15 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const checkAuth = async () => {
+  const checkAuth = () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      if (token) {
-        const decoded = jwtDecode(token);
-        const response = await authAPI.verifyToken();
-        setAdmin(response.data.data.admin);
+      const adminData = localStorage.getItem('adminUser');
+      if (adminData) {
+        setAdmin(JSON.parse(adminData));
       }
     } catch (error) {
+      console.error('Auth check error:', error);
+      localStorage.removeItem('adminUser');
       localStorage.removeItem('adminToken');
     } finally {
       setLoading(false);
@@ -37,28 +63,46 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authAPI.login(credentials);
-      const { token, admin } = response.data.data;
-      localStorage.setItem('adminToken', token);
-      setAdmin(admin);
-      return { success: true };
+      const { email, password } = credentials;
+
+      // Check against demo accounts
+      const foundAdmin = DEMO_ADMINS.find(
+        a => a.email === email && a.password === password
+      );
+
+      if (foundAdmin) {
+        // Remove password before storing
+        const { password: _, ...adminWithoutPassword } = foundAdmin;
+        
+        // Store in localStorage
+        localStorage.setItem('adminUser', JSON.stringify(adminWithoutPassword));
+        localStorage.setItem('adminToken', 'demo-token-' + Date.now());
+        
+        setAdmin(adminWithoutPassword);
+        
+        return { 
+          success: true,
+          message: 'Login successful' 
+        };
+      } else {
+        return {
+          success: false,
+          message: 'Invalid email or password'
+        };
+      }
     } catch (error) {
+      console.error('Login error:', error);
       return {
         success: false,
-        message: error.response?.data?.message || 'Login failed',
+        message: 'Login failed. Please try again.'
       };
     }
   };
 
-  const logout = async () => {
-    try {
-      await authAPI.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      localStorage.removeItem('adminToken');
-      setAdmin(null);
-    }
+  const logout = () => {
+    localStorage.removeItem('adminUser');
+    localStorage.removeItem('adminToken');
+    setAdmin(null);
   };
 
   return (
