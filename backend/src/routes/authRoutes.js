@@ -7,11 +7,14 @@ const { validateLogin, validateAdminRegistration } = require('../middleware/vali
 // Public routes
 router.post('/login', validateLogin, authController.login);
 
+// Public signup (for demo purposes - in production, this should be protected)
+router.post('/register', validateAdminRegistration, authController.register);
+
+// Alternative: Protected admin creation (super_admin only)
+router.post('/create-admin', authenticate, authorize('super_admin'), validateAdminRegistration, authController.register);
+
 // Protected routes
 router.post('/logout', authenticate, authController.logout);
 router.get('/verify', authenticate, authController.verifyToken);
-
-// Super admin only
-router.post('/register', authenticate, authorize('super_admin'), validateAdminRegistration, authController.register);
 
 module.exports = router;
