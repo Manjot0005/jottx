@@ -15,6 +15,8 @@ import {
   CardMedia,
   InputAdornment,
   Autocomplete,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   Flight,
@@ -25,6 +27,8 @@ import {
   CalendarMonth,
   Person,
   SwapHoriz,
+  TrendingFlat,
+  SyncAlt,
 } from '@mui/icons-material';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -50,6 +54,9 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState(
     initialTab === 'hotels' ? 1 : initialTab === 'cars' ? 2 : 0
   );
+  
+  // Trip type: 'oneway' or 'roundtrip'
+  const [tripType, setTripType] = useState('roundtrip');
   
   // Flight search state
   const [flightSearch, setFlightSearch] = useState({
@@ -77,11 +84,21 @@ const Home = () => {
     dropoffDate: null,
   });
 
+  const handleTripTypeChange = (event, newType) => {
+    if (newType !== null) {
+      setTripType(newType);
+      // Clear return date when switching to one-way
+      if (newType === 'oneway') {
+        setFlightSearch({ ...flightSearch, returnDate: null });
+      }
+    }
+  };
+
   const handleSearch = () => {
     let searchQuery = '';
     
     if (activeTab === 0) {
-      searchQuery = `type=flights&from=${flightSearch.from}&to=${flightSearch.to}&date=${flightSearch.departDate?.toISOString() || ''}&passengers=${flightSearch.passengers}`;
+      searchQuery = `type=flights&from=${flightSearch.from}&to=${flightSearch.to}&date=${flightSearch.departDate?.toISOString() || ''}&returnDate=${flightSearch.returnDate?.toISOString() || ''}&passengers=${flightSearch.passengers}&tripType=${tripType}`;
     } else if (activeTab === 1) {
       searchQuery = `type=hotels&destination=${hotelSearch.destination}&checkIn=${hotelSearch.checkIn?.toISOString() || ''}&checkOut=${hotelSearch.checkOut?.toISOString() || ''}&guests=${hotelSearch.guests}`;
     } else {
@@ -151,7 +168,7 @@ const Home = () => {
               <Tabs
                 value={activeTab}
                 onChange={(e, v) => setActiveTab(v)}
-                sx={{ mb: 3 }}
+                sx={{ mb: 2 }}
                 TabIndicatorProps={{
                   sx: { backgroundColor: 'primary.main', height: 3, borderRadius: 2 },
                 }}
@@ -163,75 +180,113 @@ const Home = () => {
 
               {/* Flight Search */}
               {activeTab === 0 && (
-                <Grid container spacing={2}>
-                  <Grid item xs={12} md={3}>
-                    <Autocomplete
-                      options={popularCities}
-                      value={flightSearch.from}
-                      onChange={(e, v) => setFlightSearch({ ...flightSearch, from: v || '' })}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="From"
-                          placeholder="Departure city"
-                          InputProps={{
-                            ...params.InputProps,
-                            startAdornment: <LocationOn color="action" sx={{ ml: 1 }} />,
-                          }}
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={3}>
-                    <Autocomplete
-                      options={popularCities}
-                      value={flightSearch.to}
-                      onChange={(e, v) => setFlightSearch({ ...flightSearch, to: v || '' })}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label="To"
-                          placeholder="Arrival city"
-                          InputProps={{
-                            ...params.InputProps,
-                            startAdornment: <LocationOn color="action" sx={{ ml: 1 }} />,
-                          }}
-                        />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item xs={6} md={2}>
-                    <DatePicker
-                      label="Depart"
-                      value={flightSearch.departDate}
-                      onChange={(date) => setFlightSearch({ ...flightSearch, departDate: date, returnDate: flightSearch.returnDate && date > flightSearch.returnDate ? null : flightSearch.returnDate })}
-                      minDate={new Date()}
-                      slotProps={{ textField: { fullWidth: true } }}
-                    />
-                  </Grid>
-                  <Grid item xs={6} md={2}>
-                    <DatePicker
-                      label="Return"
-                      value={flightSearch.returnDate}
-                      onChange={(date) => setFlightSearch({ ...flightSearch, returnDate: date })}
-                      minDate={flightSearch.departDate || new Date()}
-                      disabled={!flightSearch.departDate}
-                      slotProps={{ textField: { fullWidth: true, helperText: !flightSearch.departDate ? 'Select departure first' : '' } }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={2}>
-                    <Button
-                      variant="contained"
-                      fullWidth
-                      size="large"
-                      startIcon={<Search />}
-                      onClick={handleSearch}
-                      sx={{ height: 56 }}
+                <>
+                  {/* Trip Type Toggle */}
+                  <Box sx={{ mb: 2 }}>
+                    <ToggleButtonGroup
+                      value={tripType}
+                      exclusive
+                      onChange={handleTripTypeChange}
+                      size="small"
                     >
-                      Search
-                    </Button>
+                      <ToggleButton value="roundtrip" sx={{ px: 3 }}>
+                        <SyncAlt sx={{ mr: 1 }} />
+                        Round Trip
+                      </ToggleButton>
+                      <ToggleButton value="oneway" sx={{ px: 3 }}>
+                        <TrendingFlat sx={{ mr: 1 }} />
+                        One Way
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </Box>
+                  
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={3}>
+                      <Autocomplete
+                        options={popularCities}
+                        value={flightSearch.from}
+                        onChange={(e, v) => setFlightSearch({ ...flightSearch, from: v || '' })}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="From"
+                            placeholder="Departure city"
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: <LocationOn color="action" sx={{ ml: 1 }} />,
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <Autocomplete
+                        options={popularCities}
+                        value={flightSearch.to}
+                        onChange={(e, v) => setFlightSearch({ ...flightSearch, to: v || '' })}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="To"
+                            placeholder="Arrival city"
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: <LocationOn color="action" sx={{ ml: 1 }} />,
+                            }}
+                          />
+                        )}
+                      />
+                    </Grid>
+                    <Grid item xs={6} md={2}>
+                      <DatePicker
+                        label="Depart"
+                        value={flightSearch.departDate}
+                        onChange={(date) => setFlightSearch({ 
+                          ...flightSearch, 
+                          departDate: date, 
+                          returnDate: flightSearch.returnDate && date > flightSearch.returnDate ? null : flightSearch.returnDate 
+                        })}
+                        minDate={new Date()}
+                        slotProps={{ textField: { fullWidth: true } }}
+                      />
+                    </Grid>
+                    <Grid item xs={6} md={2}>
+                      <DatePicker
+                        label="Return"
+                        value={flightSearch.returnDate}
+                        onChange={(date) => setFlightSearch({ ...flightSearch, returnDate: date })}
+                        minDate={flightSearch.departDate || new Date()}
+                        disabled={tripType === 'oneway' || !flightSearch.departDate}
+                        slotProps={{ 
+                          textField: { 
+                            fullWidth: true, 
+                            helperText: tripType === 'oneway' ? 'One-way trip' : (!flightSearch.departDate ? 'Select departure first' : ''),
+                            sx: tripType === 'oneway' ? { bgcolor: 'grey.100' } : {}
+                          } 
+                        }}
+                      />
+                    </Grid>
+                    <Grid item xs={12} md={2}>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        size="large"
+                        startIcon={<Search />}
+                        onClick={handleSearch}
+                        sx={{ height: 56 }}
+                      >
+                        Search
+                      </Button>
+                    </Grid>
                   </Grid>
-                </Grid>
+                  
+                  {/* Trip type info */}
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    {tripType === 'roundtrip' 
+                      ? '🔄 Round trip: Showing outbound + return flights' 
+                      : '➡️ One way: Showing outbound flight only'}
+                  </Typography>
+                </>
               )}
 
               {/* Hotel Search */}
@@ -507,4 +562,3 @@ const Home = () => {
 };
 
 export default Home;
-

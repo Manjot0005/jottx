@@ -149,9 +149,11 @@ const SearchResults = () => {
   const pickupCity = normalizeCity(searchParams.get('pickup') || '');
   const passengersParam = parseInt(searchParams.get('passengers')) || 1;
   const guestsParam = parseInt(searchParams.get('guests')) || 1;
+  const tripType = searchParams.get('tripType') || 'roundtrip';
   
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState([]);
+  const [returnFlights, setReturnFlights] = useState([]);
   const [priceRange, setPriceRange] = useState([0, 500]);
   const [sortBy, setSortBy] = useState('price');
   const [expandedId, setExpandedId] = useState(null);
@@ -164,15 +166,29 @@ const SearchResults = () => {
     
     setTimeout(() => {
       let filteredResults = [];
+      let returnResults = [];
       
       if (type === 'flights') {
         const allFlights = initializeFlightsData();
-        // Filter by origin and destination
+        
+        // Filter outbound flights by origin and destination
         filteredResults = allFlights.filter(f => {
           const matchFrom = !fromCity || f.from.toLowerCase() === fromCity.toLowerCase();
           const matchTo = !toCity || f.to.toLowerCase() === toCity.toLowerCase();
           return matchFrom && matchTo;
         });
+        
+        // For round trip, also get return flights (destination → origin)
+        if (tripType === 'roundtrip' && fromCity && toCity) {
+          returnResults = allFlights.filter(f => {
+            const matchFrom = f.from.toLowerCase() === toCity.toLowerCase();
+            const matchTo = f.to.toLowerCase() === fromCity.toLowerCase();
+            return matchFrom && matchTo;
+          });
+          setReturnFlights(returnResults);
+        } else {
+          setReturnFlights([]);
+        }
       } else if (type === 'hotels') {
         const allHotels = initializeHotelsData();
         // Filter by city
@@ -194,7 +210,7 @@ const SearchResults = () => {
       setResults(filteredResults);
       setLoading(false);
     }, 800);
-  }, [type, fromCity, toCity, pickupCity]);
+  }, [type, fromCity, toCity, pickupCity, tripType]);
 
   const handleBooking = (item, provider, itemType) => {
     // Store selected booking info
@@ -501,6 +517,7 @@ const SearchResults = () => {
                                        type === 'hotels' ? `Hotels in ${toCity || 'Any city'}` :
                                        `Car rentals in ${pickupCity || 'Any city'}`}
           {type === 'flights' && ` • ${passengers} passenger${passengers > 1 ? 's' : ''}`}
+          {type === 'flights' && ` • ${tripType === 'roundtrip' ? '🔄 Round Trip' : '➡️ One Way'}`}
         </Alert>
 
         <Grid container spacing={3}>
@@ -571,7 +588,42 @@ const SearchResults = () => {
               </Alert>
             ) : (
               <>
-                {type === 'flights' && results.map(renderFlightCard)}
+                {type === 'flights' && (
+                  <>
+                    {/* Outbound Flights */}
+                    <Paper sx={{ p: 2, mb: 2, bgcolor: 'primary.main', color: 'white' }}>
+                      <Typography variant="h6">
+                        ✈️ Outbound: {fromCity || 'Any'} → {toCity || 'Any'}
+                      </Typography>
+                      <Typography variant="body2">
+                        {tripType === 'oneway' ? 'One-way flight' : 'Select your departing flight'}
+                      </Typography>
+                    </Paper>
+                    {results.map(renderFlightCard)}
+                    
+                    {/* Return Flights (only for round trip) */}
+                    {tripType === 'roundtrip' && fromCity && toCity && (
+                      <>
+                        <Paper sx={{ p: 2, mb: 2, mt: 4, bgcolor: 'secondary.main', color: 'white' }}>
+                          <Typography variant="h6">
+                            ✈️ Return: {toCity} → {fromCity}
+                          </Typography>
+                          <Typography variant="body2">
+                            Select your return flight
+                          </Typography>
+                        </Paper>
+                        {returnFlights.length > 0 ? (
+                          returnFlights.map(renderFlightCard)
+                        ) : (
+                          <Alert severity="warning" sx={{ mb: 2 }}>
+                            No return flights found for {toCity} → {fromCity}. 
+                            You may need to book a separate one-way ticket.
+                          </Alert>
+                        )}
+                      </>
+                    )}
+                  </>
+                )}
                 {type === 'hotels' && results.map(renderHotelCard)}
                 {type === 'cars' && results.map(renderCarCard)}
               </>
