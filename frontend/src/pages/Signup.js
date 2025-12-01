@@ -62,8 +62,8 @@ const Signup = () => {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
       setLoading(false);
       return;
     }
@@ -116,14 +116,27 @@ const Signup = () => {
 
           <form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   required
                   fullWidth
-                  label="Admin ID (SSN Format: XXX-XX-XXXX)"
+                  label="Admin ID"
                   name="admin_id"
-                  placeholder="123-45-6789"
+                  placeholder="ADM-003"
                   value={formData.admin_id}
+                  onChange={handleChange}
+                  helperText="Unique identifier (e.g., ADM-003)"
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  value={formData.email}
                   onChange={handleChange}
                 />
               </Grid>
@@ -150,18 +163,6 @@ const Signup = () => {
                 />
               </Grid>
 
-              <Grid item xs={12}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Email Address"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-              </Grid>
-
               <Grid item xs={12} sm={6}>
                 <TextField
                   required
@@ -171,7 +172,7 @@ const Signup = () => {
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
-                  helperText="Min 8 chars, uppercase, lowercase, number, special char"
+                  helperText="Min 6 characters"
                 />
               </Grid>
 

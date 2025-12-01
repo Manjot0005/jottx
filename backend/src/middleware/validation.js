@@ -13,33 +13,12 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// US States validation
-const US_STATES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-];
-
-// SSN format validator
-const isValidSSN = (value) => {
-  const ssnRegex = /^[0-9]{3}-[0-9]{2}-[0-9]{4}$/;
-  return ssnRegex.test(value);
-};
-
-// ZIP code validator
-const isValidZipCode = (value) => {
-  const zipRegex = /^[0-9]{5}(-[0-9]{4})?$/;
-  return zipRegex.test(value);
-};
-
-// Admin validation rules
+// Admin validation rules - Simplified for demo
 const validateAdminRegistration = [
   body('admin_id')
     .trim()
-    .custom(isValidSSN)
-    .withMessage('Admin ID must be in SSN format (XXX-XX-XXXX)'),
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Admin ID must be between 3 and 50 characters'),
   body('first_name')
     .trim()
     .isLength({ min: 2, max: 100 })
@@ -54,22 +33,20 @@ const validateAdminRegistration = [
     .normalizeEmail()
     .withMessage('Invalid email address'),
   body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain uppercase, lowercase, number, and special character'),
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
   body('phone_number')
     .optional()
-    .matches(/^[0-9]{10,15}$/)
-    .withMessage('Phone number must be 10-15 digits'),
+    .isLength({ min: 10, max: 15 })
+    .withMessage('Phone number must be 10-15 characters'),
   body('state')
-    .optional()
-    .custom((value) => US_STATES.includes(value.toUpperCase()))
-    .withMessage('Invalid US state abbreviation'),
+    .optional(),
   body('zip_code')
+    .optional(),
+  body('access_level')
     .optional()
-    .custom(isValidZipCode)
-    .withMessage('Invalid ZIP code format'),
+    .isIn(['admin', 'manager', 'super_admin'])
+    .withMessage('Access level must be admin, manager, or super_admin'),
   handleValidationErrors
 ];
 
@@ -89,16 +66,17 @@ const validateLogin = [
 // Listing validation
 const validateListing = [
   body('listing_type')
+    .optional()
     .isIn(['FLIGHT', 'HOTEL', 'CAR'])
     .withMessage('Listing type must be FLIGHT, HOTEL, or CAR'),
   handleValidationErrors
 ];
 
-// User ID validation
+// User ID validation - simplified
 const validateUserId = [
   param('id')
-    .custom(isValidSSN)
-    .withMessage('User ID must be in SSN format (XXX-XX-XXXX)'),
+    .notEmpty()
+    .withMessage('User ID is required'),
   handleValidationErrors
 ];
 
