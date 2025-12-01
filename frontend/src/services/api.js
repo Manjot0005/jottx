@@ -47,6 +47,9 @@ export const listingsAPI = {
   addFlight: (data) => api.post('/listings/flight', data),
   addHotel: (data) => api.post('/listings/hotel', data),
   addCar: (data) => api.post('/listings/car', data),
+  getAllFlights: () => api.get('/listings/flights'),
+  getAllHotels: () => api.get('/listings/hotels'),
+  getAllCars: () => api.get('/listings/cars'),
   search: (type, keyword) => api.get(`/listings/search?type=${type}&keyword=${keyword}`),
 };
 

@@ -76,7 +76,7 @@ const Billing = () => {
     setStartDate('');
     setEndDate('');
     setBookingType('');
-    fetchBilling();
+      fetchBilling();
   };
 
   // Filter bills based on search query
@@ -129,7 +129,7 @@ const Billing = () => {
       case 'HOTEL': return 'secondary';
       case 'CAR': return 'success';
       default: return 'default';
-    }
+  }
   };
 
   return (
@@ -184,7 +184,7 @@ const Billing = () => {
                   <Typography variant="body2" color="textSecondary">Avg Transaction</Typography>
                   <Typography variant="h4" fontWeight={600}>
                     {formatCurrency(bills.length > 0 ? stats.totalRevenue / bills.length : 0)}
-                  </Typography>
+      </Typography>
                 </Box>
               </Box>
             </CardContent>
@@ -291,13 +291,13 @@ const Billing = () => {
                       {bill.billing_id || `BIL-${index + 1}`}
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                <TableCell>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                       {bill.user_id || 'N/A'}
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
+                </TableCell>
+                <TableCell>
+                  <Chip
                       size="small"
                       label={bill.booking_type || 'N/A'}
                       color={getTypeColor(bill.booking_type)}
@@ -319,10 +319,10 @@ const Billing = () => {
                     <Chip
                       size="small"
                       label={bill.transaction_status || 'COMPLETED'}
-                      color={getStatusColor(bill.transaction_status)}
-                    />
-                  </TableCell>
-                </TableRow>
+                    color={getStatusColor(bill.transaction_status)}
+                  />
+                </TableCell>
+              </TableRow>
               ))
             )}
           </TableBody>

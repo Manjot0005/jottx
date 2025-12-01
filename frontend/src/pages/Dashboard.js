@@ -138,8 +138,8 @@ const Dashboard = () => {
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" fontWeight={600}>
-          Dashboard
-        </Typography>
+        Dashboard
+      </Typography>
         <Chip 
           icon={<TrendingUp />} 
           label="Live Data" 
@@ -290,7 +290,7 @@ const Dashboard = () => {
             )}
           </Paper>
         </Grid>
-      </Grid>
+        </Grid>
 
       {/* Recent Bookings */}
       <Grid container spacing={3}>
@@ -318,7 +318,7 @@ const Dashboard = () => {
                     <Box sx={{ textAlign: 'right' }}>
                       <Typography variant="body1" fontWeight={600}>
                         {formatCurrency(booking.totalPrice || booking.total_price || 0)}
-                      </Typography>
+            </Typography>
                       <Chip
                         size="small"
                         label={booking.status || 'confirmed'}
@@ -333,7 +333,7 @@ const Dashboard = () => {
               <Box sx={{ py: 4, textAlign: 'center' }}>
                 <Typography color="textSecondary">
                   No bookings yet. Bookings made on the traveler site (port 3001) will appear here!
-                </Typography>
+            </Typography>
               </Box>
             )}
           </Paper>

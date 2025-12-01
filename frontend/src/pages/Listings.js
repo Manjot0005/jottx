@@ -23,6 +23,7 @@ import {
 } from '@mui/material';
 import { Flight, Hotel, DirectionsCar, Delete, Visibility, Refresh } from '@mui/icons-material';
 import { flightsStore, hotelsStore, carsStore } from '../services/sharedData';
+import { listingsAPI } from '../services/api';
 
 const Listings = () => {
   const [tab, setTab] = useState(0);
@@ -88,10 +89,15 @@ const Listings = () => {
     setCars(carsStore.getAll());
   };
 
-  const handleFlightSubmit = (e) => {
+  const handleFlightSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Call backend API
+      await listingsAPI.addFlight(flightData);
+      
+      // Also add to localStorage for backward compatibility
       flightsStore.add(flightData);
+      
       setSuccess('Flight added successfully! It will now appear on the traveler site.');
       setError('');
       setFlightData({
@@ -109,18 +115,25 @@ const Listings = () => {
       });
       loadListings();
     } catch (err) {
-      setError(err.message || 'Failed to add flight');
+      setError(err.response?.data?.message || err.message || 'Failed to add flight');
       setSuccess('');
     }
   };
 
-  const handleHotelSubmit = (e) => {
+  const handleHotelSubmit = async (e) => {
     e.preventDefault();
     try {
-      hotelsStore.add({
+      const hotelPayload = {
         ...hotelData,
         amenities: hotelData.amenities.split(',').map((a) => a.trim()),
-      });
+      };
+      
+      // Call backend API
+      await listingsAPI.addHotel(hotelPayload);
+      
+      // Also add to localStorage for backward compatibility
+      hotelsStore.add(hotelPayload);
+      
       setSuccess('Hotel added successfully! It will now appear on the traveler site.');
       setError('');
       setHotelData({
@@ -139,15 +152,20 @@ const Listings = () => {
       });
       loadListings();
     } catch (err) {
-      setError(err.message || 'Failed to add hotel');
+      setError(err.response?.data?.message || err.message || 'Failed to add hotel');
       setSuccess('');
     }
   };
 
-  const handleCarSubmit = (e) => {
+  const handleCarSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Call backend API
+      await listingsAPI.addCar(carData);
+      
+      // Also add to localStorage for backward compatibility
       carsStore.add(carData);
+      
       setSuccess('Car added successfully! It will now appear on the traveler site.');
       setError('');
       setCarData({
@@ -163,7 +181,7 @@ const Listings = () => {
       });
       loadListings();
     } catch (err) {
-      setError(err.message || 'Failed to add car');
+      setError(err.response?.data?.message || err.message || 'Failed to add car');
       setSuccess('');
     }
   };
@@ -195,9 +213,9 @@ const Listings = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4" gutterBottom>
-          Manage Listings
-        </Typography>
+      <Typography variant="h4" gutterBottom>
+        Manage Listings
+      </Typography>
         <Button startIcon={<Refresh />} onClick={loadListings}>
           Refresh
         </Button>

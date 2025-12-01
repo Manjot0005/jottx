@@ -32,6 +32,7 @@ import {
   AirlineSeatReclineNormal,
   Warning,
 } from '@mui/icons-material';
+import { listingsAPI } from '../services/api';
 
 // Initialize flights data in localStorage if not exists
 const initializeFlightsData = () => {
@@ -161,55 +162,161 @@ const SearchResults = () => {
   const [noResults, setNoResults] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    setNoResults(false);
-    
-    setTimeout(() => {
-      let filteredResults = [];
-      let returnResults = [];
+    const fetchData = async () => {
+      setLoading(true);
+      setNoResults(false);
       
-      if (type === 'flights') {
-        const allFlights = initializeFlightsData();
+      try {
+        let filteredResults = [];
+        let returnResults = [];
         
-        // Filter outbound flights by origin and destination
-        filteredResults = allFlights.filter(f => {
-          const matchFrom = !fromCity || f.from.toLowerCase() === fromCity.toLowerCase();
-          const matchTo = !toCity || f.to.toLowerCase() === toCity.toLowerCase();
-          return matchFrom && matchTo;
-        });
-        
-        // For round trip, also get return flights (destination → origin)
-        if (tripType === 'roundtrip' && fromCity && toCity) {
-          returnResults = allFlights.filter(f => {
-            const matchFrom = f.from.toLowerCase() === toCity.toLowerCase();
-            const matchTo = f.to.toLowerCase() === fromCity.toLowerCase();
+        if (type === 'flights') {
+          // Fetch from backend API
+          const backendResponse = await listingsAPI.getAllFlights();
+          const backendFlights = backendResponse.data.data || [];
+          
+          // Convert backend format to traveler format
+          const formattedBackendFlights = backendFlights.map(f => {
+            const departTime = f.departure_datetime ? new Date(f.departure_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '08:00';
+            const arriveTime = f.arrival_datetime ? new Date(f.arrival_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '12:00';
+            const durationMins = f.duration || 120;
+            const durationStr = `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`;
+            
+            return {
+              id: f.flight_id,
+              flightNumber: f.flight_id,
+              airline: f.airline_name,
+              from: f.departure_airport,
+              to: f.arrival_airport,
+              departTime,
+              arriveTime,
+              duration: durationStr,
+              stops: 0,
+              seatsAvailable: f.available_seats || f.total_seats || 0,
+              providers: [
+                { name: 'Kayak Direct', price: parseFloat(f.ticket_price) || 100 },
+                { name: 'Expedia', price: Math.round((parseFloat(f.ticket_price) || 100) * 1.05) },
+                { name: 'Priceline', price: Math.round((parseFloat(f.ticket_price) || 100) * 1.1) },
+              ],
+            };
+          });
+          
+          // Get mock data and merge
+          const mockFlights = initializeFlightsData();
+          const allFlights = [...formattedBackendFlights, ...mockFlights];
+          
+          // Filter outbound flights by origin and destination
+          filteredResults = allFlights.filter(f => {
+            const matchFrom = !fromCity || f.from.toLowerCase() === fromCity.toLowerCase();
+            const matchTo = !toCity || f.to.toLowerCase() === toCity.toLowerCase();
             return matchFrom && matchTo;
           });
-          setReturnFlights(returnResults);
-        } else {
-          setReturnFlights([]);
+          
+          // For round trip, also get return flights (destination → origin)
+          if (tripType === 'roundtrip' && fromCity && toCity) {
+            returnResults = allFlights.filter(f => {
+              const matchFrom = f.from.toLowerCase() === toCity.toLowerCase();
+              const matchTo = f.to.toLowerCase() === fromCity.toLowerCase();
+              return matchFrom && matchTo;
+            });
+            setReturnFlights(returnResults);
+          } else {
+            setReturnFlights([]);
+          }
+        } else if (type === 'hotels') {
+          // Fetch from backend API
+          const backendResponse = await listingsAPI.getAllHotels();
+          const backendHotels = backendResponse.data.data || [];
+          
+          // Convert backend format to traveler format
+          const formattedBackendHotels = backendHotels.map(h => ({
+            id: h.hotel_id,
+            name: h.hotel_name,
+            city: h.city,
+            location: `${h.city}, ${h.state}`,
+            rating: parseFloat(h.star_rating) || 4,
+            reviews: Math.floor(Math.random() * 1000) + 100,
+            stars: parseInt(h.star_rating) || 4,
+            roomsAvailable: h.available_rooms || h.total_rooms || 0,
+            amenities: h.amenities || [],
+            providers: [
+              { name: 'Booking.com', price: parseFloat(h.price_per_night) || 100 },
+              { name: 'Hotels.com', price: Math.round((parseFloat(h.price_per_night) || 100) * 1.05) },
+              { name: 'Expedia', price: Math.round((parseFloat(h.price_per_night) || 100) * 1.1) },
+            ],
+          }));
+          
+          // Get mock data and merge
+          const mockHotels = initializeHotelsData();
+          const allHotels = [...formattedBackendHotels, ...mockHotels];
+          
+          // Filter by city
+          filteredResults = allHotels.filter(h => {
+            return !toCity || h.city.toLowerCase() === toCity.toLowerCase();
+          });
+        } else if (type === 'cars') {
+          // Fetch from backend API
+          const backendResponse = await listingsAPI.getAllCars();
+          const backendCars = backendResponse.data.data || [];
+          
+          // Convert backend format to traveler format
+          const formattedBackendCars = backendCars.map(c => ({
+            id: c.car_id,
+            type: c.car_type,
+            model: `${c.model} ${c.year || ''}`.trim(),
+            passengerCapacity: parseInt(c.seats) || 5,
+            bags: Math.ceil((parseInt(c.seats) || 5) / 2),
+            transmission: c.transmission_type || 'Automatic',
+            carsAvailable: c.availability_status === 'AVAILABLE' ? 10 : 0,
+            cities: ['New York', 'Los Angeles', 'Chicago', 'Miami', 'San Francisco', 'Denver', 'Seattle'],
+            providers: [
+              { name: c.company_name, price: parseFloat(c.daily_rental_price) || 50 },
+              { name: 'Enterprise', price: Math.round((parseFloat(c.daily_rental_price) || 50) * 1.05) },
+              { name: 'Budget', price: Math.round((parseFloat(c.daily_rental_price) || 50) * 0.95) },
+            ],
+          }));
+          
+          // Get mock data and merge
+          const mockCars = initializeCarsData();
+          const allCars = [...formattedBackendCars, ...mockCars];
+          
+          // Filter by pickup city
+          filteredResults = allCars.filter(c => {
+            return !pickupCity || c.cities.some(city => city.toLowerCase() === pickupCity.toLowerCase());
+          });
         }
-      } else if (type === 'hotels') {
-        const allHotels = initializeHotelsData();
-        // Filter by city
-        filteredResults = allHotels.filter(h => {
-          return !toCity || h.city.toLowerCase() === toCity.toLowerCase();
-        });
-      } else if (type === 'cars') {
-        const allCars = initializeCarsData();
-        // Filter by pickup city
-        filteredResults = allCars.filter(c => {
-          return !pickupCity || c.cities.some(city => city.toLowerCase() === pickupCity.toLowerCase());
-        });
+        
+        if (filteredResults.length === 0) {
+          setNoResults(true);
+        }
+        
+        setResults(filteredResults);
+      } catch (error) {
+        console.error('Error fetching listings:', error);
+        // Fallback to mock data if backend fails
+        if (type === 'flights') {
+          const mockFlights = initializeFlightsData();
+          filteredResults = mockFlights.filter(f => {
+            const matchFrom = !fromCity || f.from.toLowerCase() === fromCity.toLowerCase();
+            const matchTo = !toCity || f.to.toLowerCase() === toCity.toLowerCase();
+            return matchFrom && matchTo;
+          });
+          setResults(filteredResults);
+        } else if (type === 'hotels') {
+          const mockHotels = initializeHotelsData();
+          filteredResults = mockHotels.filter(h => !toCity || h.city.toLowerCase() === toCity.toLowerCase());
+          setResults(filteredResults);
+        } else if (type === 'cars') {
+          const mockCars = initializeCarsData();
+          filteredResults = mockCars.filter(c => !pickupCity || c.cities.some(city => city.toLowerCase() === pickupCity.toLowerCase()));
+          setResults(filteredResults);
+        }
+      } finally {
+        setLoading(false);
       }
-      
-      if (filteredResults.length === 0) {
-        setNoResults(true);
-      }
-      
-      setResults(filteredResults);
-      setLoading(false);
-    }, 800);
+    };
+    
+    fetchData();
   }, [type, fromCity, toCity, pickupCity, tripType]);
 
   const handleBooking = (item, provider, itemType) => {
