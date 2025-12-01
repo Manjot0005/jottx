@@ -15,8 +15,6 @@ import {
   CardContent,
   Divider,
   Alert,
-  FormControlLabel,
-  Checkbox,
 } from '@mui/material';
 import {
   Flight,
@@ -42,6 +40,7 @@ const Booking = () => {
   const { user } = useAuth();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [confirmationNumber, setConfirmationNumber] = useState('');
   
   const item = mockItems[type] || mockItems.flights;
 
@@ -49,7 +48,7 @@ const Booking = () => {
     firstName: user?.first_name || '',
     lastName: user?.last_name || '',
     email: user?.email || '',
-    phone: '',
+    phone: user?.phone || '',
   });
 
   const [paymentInfo, setPaymentInfo] = useState({
@@ -59,7 +58,54 @@ const Booking = () => {
     nameOnCard: '',
   });
 
+  const [errors, setErrors] = useState({});
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          Please sign in to make a booking
+        </Alert>
+        <Button variant="contained" onClick={() => navigate('/login')}>
+          Sign In
+        </Button>
+      </Container>
+    );
+  }
+
+  const validatePhone = (phone) => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length === 10;
+  };
+
+  const validateStep1 = () => {
+    const newErrors = {};
+    if (!travelerInfo.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!travelerInfo.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!travelerInfo.email.includes('@')) newErrors.email = 'Valid email is required';
+    if (!validatePhone(travelerInfo.phone)) newErrors.phone = 'Phone must be 10 digits';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const newErrors = {};
+    if (paymentInfo.cardNumber.replace(/\s/g, '').length < 16) newErrors.cardNumber = 'Enter valid card number';
+    if (!paymentInfo.expiry.match(/^\d{2}\/\d{2}$/)) newErrors.expiry = 'Use MM/YY format';
+    if (paymentInfo.cvv.length < 3) newErrors.cvv = 'Enter valid CVV';
+    if (!paymentInfo.nameOnCard.trim()) newErrors.nameOnCard = 'Name on card is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleNext = () => {
+    if (activeStep === 0 && !validateStep1()) return;
+    if (activeStep === 1) {
+      if (!validateStep2()) return;
+      handleConfirm();
+      return;
+    }
     if (activeStep === steps.length - 1) {
       navigate('/my-bookings');
     } else {
@@ -69,13 +115,50 @@ const Booking = () => {
 
   const handleBack = () => {
     setActiveStep((prev) => prev - 1);
+    setErrors({});
   };
 
   const handleConfirm = () => {
     setLoading(true);
+    
     setTimeout(() => {
+      // Generate confirmation number
+      const confNum = 'BK' + Date.now().toString().slice(-8);
+      setConfirmationNumber(confNum);
+
+      // Create booking record
+      const booking = {
+        id: 'booking-' + Date.now(),
+        confirmationNumber: confNum,
+        type: type,
+        name: item.name,
+        from: item.from,
+        to: item.to,
+        location: item.location,
+        company: item.company,
+        date: new Date().toISOString(),
+        price: item.price,
+        totalPrice: getTotalPrice() + Math.round(getTotalPrice() * 0.1),
+        status: 'confirmed',
+        traveler: {
+          firstName: travelerInfo.firstName,
+          lastName: travelerInfo.lastName,
+          email: travelerInfo.email,
+          phone: travelerInfo.phone,
+        },
+        createdAt: new Date().toISOString(),
+      };
+
+      // Save to user's bookings
+      const allBookings = JSON.parse(localStorage.getItem('userBookings') || '{}');
+      if (!allBookings[user.user_id]) {
+        allBookings[user.user_id] = [];
+      }
+      allBookings[user.user_id].push(booking);
+      localStorage.setItem('userBookings', JSON.stringify(allBookings));
+
       setLoading(false);
-      handleNext();
+      setActiveStep((prev) => prev + 1);
     }, 2000);
   };
 
@@ -89,6 +172,19 @@ const Booking = () => {
     if (type === 'hotels') return item.price * item.nights;
     if (type === 'cars') return item.price * item.days;
     return item.price;
+  };
+
+  const formatCardNumber = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 16);
+    return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  const formatExpiry = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (digits.length >= 2) {
+      return digits.slice(0, 2) + '/' + digits.slice(2);
+    }
+    return digits;
   };
 
   return (
@@ -125,6 +221,8 @@ const Booking = () => {
                         value={travelerInfo.firstName}
                         onChange={(e) => setTravelerInfo({ ...travelerInfo, firstName: e.target.value })}
                         required
+                        error={!!errors.firstName}
+                        helperText={errors.firstName}
                       />
                     </Grid>
                     <Grid item xs={6}>
@@ -134,6 +232,8 @@ const Booking = () => {
                         value={travelerInfo.lastName}
                         onChange={(e) => setTravelerInfo({ ...travelerInfo, lastName: e.target.value })}
                         required
+                        error={!!errors.lastName}
+                        helperText={errors.lastName}
                       />
                     </Grid>
                     <Grid item xs={12}>
@@ -144,6 +244,8 @@ const Booking = () => {
                         value={travelerInfo.email}
                         onChange={(e) => setTravelerInfo({ ...travelerInfo, email: e.target.value })}
                         required
+                        error={!!errors.email}
+                        helperText={errors.email}
                       />
                     </Grid>
                     <Grid item xs={12}>
@@ -151,8 +253,14 @@ const Booking = () => {
                         fullWidth
                         label="Phone Number"
                         value={travelerInfo.phone}
-                        onChange={(e) => setTravelerInfo({ ...travelerInfo, phone: e.target.value })}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setTravelerInfo({ ...travelerInfo, phone: digits });
+                        }}
                         required
+                        error={!!errors.phone}
+                        helperText={errors.phone || 'Must be 10 digits'}
+                        placeholder="5551234567"
                       />
                     </Grid>
                   </Grid>
@@ -173,8 +281,11 @@ const Booking = () => {
                         label="Card Number"
                         placeholder="1234 5678 9012 3456"
                         value={paymentInfo.cardNumber}
-                        onChange={(e) => setPaymentInfo({ ...paymentInfo, cardNumber: e.target.value })}
+                        onChange={(e) => setPaymentInfo({ ...paymentInfo, cardNumber: formatCardNumber(e.target.value) })}
                         required
+                        error={!!errors.cardNumber}
+                        helperText={errors.cardNumber}
+                        inputProps={{ maxLength: 19 }}
                       />
                     </Grid>
                     <Grid item xs={6}>
@@ -183,8 +294,11 @@ const Booking = () => {
                         label="Expiry Date"
                         placeholder="MM/YY"
                         value={paymentInfo.expiry}
-                        onChange={(e) => setPaymentInfo({ ...paymentInfo, expiry: e.target.value })}
+                        onChange={(e) => setPaymentInfo({ ...paymentInfo, expiry: formatExpiry(e.target.value) })}
                         required
+                        error={!!errors.expiry}
+                        helperText={errors.expiry}
+                        inputProps={{ maxLength: 5 }}
                       />
                     </Grid>
                     <Grid item xs={6}>
@@ -193,8 +307,11 @@ const Booking = () => {
                         label="CVV"
                         placeholder="123"
                         value={paymentInfo.cvv}
-                        onChange={(e) => setPaymentInfo({ ...paymentInfo, cvv: e.target.value })}
+                        onChange={(e) => setPaymentInfo({ ...paymentInfo, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
                         required
+                        error={!!errors.cvv}
+                        helperText={errors.cvv}
+                        inputProps={{ maxLength: 4 }}
                       />
                     </Grid>
                     <Grid item xs={12}>
@@ -204,11 +321,13 @@ const Booking = () => {
                         value={paymentInfo.nameOnCard}
                         onChange={(e) => setPaymentInfo({ ...paymentInfo, nameOnCard: e.target.value })}
                         required
+                        error={!!errors.nameOnCard}
+                        helperText={errors.nameOnCard}
                       />
                     </Grid>
                   </Grid>
                   <Alert severity="info" sx={{ mt: 2 }}>
-                    Demo: Enter any card details to proceed
+                    For demo: Use any valid card format (e.g., 4111 1111 1111 1111)
                   </Alert>
                 </>
               )}
@@ -221,11 +340,14 @@ const Booking = () => {
                     Booking Confirmed!
                   </Typography>
                   <Typography color="text.secondary" sx={{ mb: 3 }}>
-                    Your confirmation number is <strong>BK{Date.now()}</strong>
+                    Your confirmation number is <strong>{confirmationNumber}</strong>
                   </Typography>
                   <Typography color="text.secondary">
                     A confirmation email has been sent to {travelerInfo.email}
                   </Typography>
+                  <Alert severity="success" sx={{ mt: 3, maxWidth: 400, mx: 'auto' }}>
+                    This booking is saved to your account: {user.email}
+                  </Alert>
                 </Box>
               )}
 
@@ -238,19 +360,20 @@ const Booking = () => {
                 >
                   Back
                 </Button>
-                {activeStep === 1 ? (
-                  <Button
-                    variant="contained"
-                    onClick={handleConfirm}
-                    disabled={loading}
-                  >
-                    {loading ? 'Processing...' : `Pay $${getTotalPrice()}`}
-                  </Button>
-                ) : (
-                  <Button variant="contained" onClick={handleNext}>
-                    {activeStep === steps.length - 1 ? 'View My Bookings' : 'Continue'}
-                  </Button>
-                )}
+                <Button
+                  variant="contained"
+                  onClick={handleNext}
+                  disabled={loading}
+                >
+                  {loading 
+                    ? 'Processing...' 
+                    : activeStep === 1 
+                      ? `Pay $${getTotalPrice() + Math.round(getTotalPrice() * 0.1)}` 
+                      : activeStep === steps.length - 1 
+                        ? 'View My Bookings' 
+                        : 'Continue'
+                  }
+                </Button>
               </Box>
             </Paper>
           </Grid>
@@ -313,6 +436,21 @@ const Booking = () => {
                 </Box>
               </CardContent>
             </Card>
+            
+            {/* Logged in user info */}
+            <Card sx={{ mt: 2 }}>
+              <CardContent>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Booking as:
+                </Typography>
+                <Typography fontWeight={500}>
+                  {user.first_name} {user.last_name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {user.email}
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
         </Grid>
       </Container>
@@ -321,4 +459,3 @@ const Booking = () => {
 };
 
 export default Booking;
-

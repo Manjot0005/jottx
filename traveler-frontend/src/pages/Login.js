@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { Login as LoginIcon, Google, Facebook } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,17 +26,56 @@ const Login = () => {
     setLoading(true);
     setError('');
 
-    // Demo login - accept any credentials
-    setTimeout(() => {
-      const userData = {
-        user_id: 'USR-001',
-        email: formData.email,
-        first_name: formData.email.split('@')[0],
-        last_name: 'User',
-      };
-      login(userData, 'demo-token-123');
+    // Basic validation
+    if (!formData.email || !formData.password) {
+      setError('Please enter both email and password');
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Try API login first
+      const response = await authAPI.login(formData);
+      const { user, token } = response.data.data;
+      login(user, token);
       navigate('/');
-    }, 1000);
+    } catch (err) {
+      // For demo purposes - check against stored users in localStorage
+      const storedUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const user = storedUsers.find(u => u.email === formData.email);
+      
+      if (user) {
+        if (user.password === formData.password) {
+          const userData = {
+            user_id: user.user_id,
+            email: user.email,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            phone: user.phone,
+          };
+          login(userData, 'token-' + user.user_id);
+          navigate('/');
+        } else {
+          setError('Invalid password. Please try again.');
+        }
+      } else {
+        setError('No account found with this email. Please sign up first.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,6 +104,7 @@ const Login = () => {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               sx={{ mb: 2 }}
+              error={error.includes('email')}
             />
             <TextField
               fullWidth
@@ -73,6 +114,8 @@ const Login = () => {
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
               sx={{ mb: 3 }}
+              helperText="Minimum 6 characters"
+              error={error.includes('password') || error.includes('Password')}
             />
             <Button
               type="submit"
@@ -104,7 +147,7 @@ const Login = () => {
           </Typography>
 
           <Alert severity="info" sx={{ mt: 3 }}>
-            <strong>Demo:</strong> Enter any email and password to login
+            <strong>Note:</strong> You must sign up first to create an account, then login with your credentials.
           </Alert>
         </Paper>
       </Box>
@@ -113,4 +156,3 @@ const Login = () => {
 };
 
 export default Login;
-

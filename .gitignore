@@ -1,6 +1,35 @@
-# Minimal gitignore
+# Dependencies
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Build
+build/
+dist/
+*/build/
+**/build/
+
+# Environment
 .env
 .env.local
-.DS_Store
-*.log
+.env.*.local
 
+# Logs
+*.log
+logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+
+# Cache
+.cache/
+**/.cache/

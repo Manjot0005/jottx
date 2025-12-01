@@ -27,10 +27,39 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const validatePhone = (phone) => {
+    // Remove all non-digits
+    const digitsOnly = phone.replace(/\D/g, '');
+    return digitsOnly.length === 10;
+  };
+
+  const validateEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Validation
+    if (!formData.first_name.trim() || !formData.last_name.trim()) {
+      setError('First name and last name are required');
+      setLoading(false);
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      setError('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setLoading(false);
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -38,17 +67,68 @@ const Signup = () => {
       return;
     }
 
-    // Demo signup - accept any data
+    if (formData.phone && !validatePhone(formData.phone)) {
+      setError('Phone number must be exactly 10 digits');
+      setLoading(false);
+      return;
+    }
+
+    // Check if email already exists
+    const storedUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    if (storedUsers.find(u => u.email === formData.email)) {
+      setError('An account with this email already exists. Please login instead.');
+      setLoading(false);
+      return;
+    }
+
+    // Create new user
+    const userId = 'USR-' + Date.now();
+    const newUser = {
+      user_id: userId,
+      email: formData.email,
+      password: formData.password, // In production, this would be hashed
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone: formData.phone.replace(/\D/g, ''), // Store only digits
+      created_at: new Date().toISOString(),
+    };
+
+    // Save to localStorage
+    storedUsers.push(newUser);
+    localStorage.setItem('registeredUsers', JSON.stringify(storedUsers));
+
+    // Initialize empty bookings for this user
+    const userBookings = JSON.parse(localStorage.getItem('userBookings') || '{}');
+    userBookings[userId] = [];
+    localStorage.setItem('userBookings', JSON.stringify(userBookings));
+
+    // Login the new user
+    const userData = {
+      user_id: userId,
+      email: newUser.email,
+      first_name: newUser.first_name,
+      last_name: newUser.last_name,
+      phone: newUser.phone,
+    };
+    login(userData, 'token-' + userId);
+    
     setTimeout(() => {
-      const userData = {
-        user_id: 'USR-' + Date.now(),
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-      };
-      login(userData, 'demo-token-' + Date.now());
       navigate('/');
-    }, 1000);
+    }, 500);
+  };
+
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    // Limit to 10 digits
+    const limited = digits.slice(0, 10);
+    // Format as (XXX) XXX-XXXX
+    if (limited.length >= 6) {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
+    } else if (limited.length >= 3) {
+      return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+    }
+    return limited;
   };
 
   return (
@@ -77,6 +157,7 @@ const Signup = () => {
                   value={formData.first_name}
                   onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   required
+                  error={error.includes('name')}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -86,6 +167,7 @@ const Signup = () => {
                   value={formData.last_name}
                   onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                   required
+                  error={error.includes('name')}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -96,6 +178,7 @@ const Signup = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
+                  error={error.includes('email')}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -103,7 +186,11 @@ const Signup = () => {
                   fullWidth
                   label="Phone Number"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
+                  placeholder="(555) 123-4567"
+                  helperText="Must be 10 digits"
+                  error={error.includes('Phone')}
+                  inputProps={{ maxLength: 14 }}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -114,6 +201,8 @@ const Signup = () => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  helperText="Minimum 6 characters"
+                  error={error.includes('Password') || error.includes('password')}
                 />
               </Grid>
               <Grid item xs={6}>
@@ -124,6 +213,7 @@ const Signup = () => {
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   required
+                  error={error.includes('match')}
                 />
               </Grid>
             </Grid>
@@ -153,4 +243,3 @@ const Signup = () => {
 };
 
 export default Signup;
-

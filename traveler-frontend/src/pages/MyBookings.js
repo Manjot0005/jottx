@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -10,55 +10,31 @@ import {
   Button,
   Tabs,
   Tab,
-  Divider,
+  Alert,
 } from '@mui/material';
 import {
   Flight,
   Hotel,
   DirectionsCar,
   CalendarMonth,
-  LocationOn,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-const mockBookings = [
-  {
-    id: 'BK001',
-    type: 'flight',
-    status: 'confirmed',
-    name: 'United Airlines',
-    from: 'San Jose',
-    to: 'New York',
-    date: 'Dec 15, 2025',
-    price: 329,
-  },
-  {
-    id: 'BK002',
-    type: 'hotel',
-    status: 'confirmed',
-    name: 'Grand Hyatt',
-    location: 'New York, NY',
-    checkIn: 'Dec 15, 2025',
-    checkOut: 'Dec 18, 2025',
-    price: 867,
-  },
-  {
-    id: 'BK003',
-    type: 'car',
-    status: 'completed',
-    name: 'Toyota Camry',
-    company: 'Hertz',
-    pickup: 'Dec 10, 2025',
-    dropoff: 'Dec 12, 2025',
-    price: 195,
-  },
-];
 
 const MyBookings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
+  const [bookings, setBookings] = useState([]);
+
+  useEffect(() => {
+    if (user) {
+      // Load bookings specific to this user
+      const allBookings = JSON.parse(localStorage.getItem('userBookings') || '{}');
+      const userBookings = allBookings[user.user_id] || [];
+      setBookings(userBookings);
+    }
+  }, [user]);
 
   if (!user) {
     return (
@@ -70,8 +46,8 @@ const MyBookings = () => {
   }
 
   const getIcon = (type) => {
-    if (type === 'flight') return <Flight sx={{ color: 'primary.main' }} />;
-    if (type === 'hotel') return <Hotel sx={{ color: 'primary.main' }} />;
+    if (type === 'flights') return <Flight sx={{ color: 'primary.main' }} />;
+    if (type === 'hotels') return <Hotel sx={{ color: 'primary.main' }} />;
     return <DirectionsCar sx={{ color: 'primary.main' }} />;
   };
 
@@ -82,11 +58,26 @@ const MyBookings = () => {
     return 'error';
   };
 
+  const now = new Date();
   const filteredBookings = tabValue === 0 
-    ? mockBookings 
-    : mockBookings.filter(b => 
-        tabValue === 1 ? b.status === 'confirmed' : b.status === 'completed'
+    ? bookings 
+    : bookings.filter(b => {
+        const bookingDate = new Date(b.date);
+        return tabValue === 1 ? bookingDate >= now : bookingDate < now;
+      });
+
+  const handleCancelBooking = (bookingId) => {
+    if (window.confirm('Are you sure you want to cancel this booking?')) {
+      const allBookings = JSON.parse(localStorage.getItem('userBookings') || '{}');
+      const userBookings = allBookings[user.user_id] || [];
+      const updatedBookings = userBookings.map(b => 
+        b.id === bookingId ? { ...b, status: 'cancelled' } : b
       );
+      allBookings[user.user_id] = updatedBookings;
+      localStorage.setItem('userBookings', JSON.stringify(allBookings));
+      setBookings(updatedBookings);
+    }
+  };
 
   return (
     <Box sx={{ bgcolor: 'grey.50', minHeight: '100vh', py: 4 }}>
@@ -99,17 +90,23 @@ const MyBookings = () => {
         </Typography>
 
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)} sx={{ mb: 4 }}>
-          <Tab label="All Bookings" />
+          <Tab label={`All Bookings (${bookings.length})`} />
           <Tab label="Upcoming" />
           <Tab label="Past" />
         </Tabs>
 
-        {filteredBookings.length === 0 ? (
+        {bookings.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h6" color="text.secondary">No bookings found</Typography>
+            <Alert severity="info" sx={{ mb: 3, maxWidth: 500, mx: 'auto' }}>
+              You haven't made any bookings yet. Start exploring!
+            </Alert>
             <Button variant="contained" onClick={() => navigate('/')} sx={{ mt: 2 }}>
-              Start Booking
+              Search Flights, Hotels & Cars
             </Button>
+          </Box>
+        ) : filteredBookings.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h6" color="text.secondary">No {tabValue === 1 ? 'upcoming' : 'past'} bookings</Typography>
           </Box>
         ) : (
           <Grid container spacing={3}>
@@ -125,17 +122,17 @@ const MyBookings = () => {
                         <Typography variant="h6" fontWeight={600}>
                           {booking.name}
                         </Typography>
-                        {booking.type === 'flight' && (
+                        {booking.type === 'flights' && (
                           <Typography color="text.secondary">
                             {booking.from} → {booking.to}
                           </Typography>
                         )}
-                        {booking.type === 'hotel' && (
+                        {booking.type === 'hotels' && (
                           <Typography color="text.secondary">
                             {booking.location}
                           </Typography>
                         )}
-                        {booking.type === 'car' && (
+                        {booking.type === 'cars' && (
                           <Typography color="text.secondary">
                             {booking.company}
                           </Typography>
@@ -145,9 +142,12 @@ const MyBookings = () => {
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <CalendarMonth fontSize="small" color="action" />
                           <Typography variant="body2">
-                            {booking.date || booking.checkIn || booking.pickup}
+                            {new Date(booking.date).toLocaleDateString()}
                           </Typography>
                         </Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Confirmation: {booking.confirmationNumber}
+                        </Typography>
                       </Grid>
                       <Grid item xs={12} md={2}>
                         <Chip
@@ -158,9 +158,18 @@ const MyBookings = () => {
                       </Grid>
                       <Grid item xs={12} md={2} sx={{ textAlign: 'right' }}>
                         <Typography variant="h6" fontWeight={600} color="primary.main">
-                          ${booking.price}
+                          ${booking.totalPrice}
                         </Typography>
-                        <Button size="small" sx={{ mt: 1 }}>View Details</Button>
+                        {booking.status === 'confirmed' && (
+                          <Button 
+                            size="small" 
+                            color="error" 
+                            onClick={() => handleCancelBooking(booking.id)}
+                            sx={{ mt: 1 }}
+                          >
+                            Cancel
+                          </Button>
+                        )}
                       </Grid>
                     </Grid>
                   </CardContent>
@@ -175,4 +184,3 @@ const MyBookings = () => {
 };
 
 export default MyBookings;
-
