@@ -51,6 +51,10 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "mongodb": "^7.0.0",
+    "mysql2": "^3.15.3",
+    "redis": "^5.10.0"
   }
 }
-

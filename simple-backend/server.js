@@ -253,6 +253,12 @@ app.post('/api/users/register', (req, res) => {
   }
 });
 
+// =============================================
+// ANALYTICS ROUTES
+// =============================================
+const analyticsRoutes = require('./routes/analyticsRoutes');
+app.use('/api', analyticsRoutes);
+
 // Start server
 app.listen(PORT, () => {
   console.log('========================================');
@@ -268,6 +274,9 @@ app.listen(PORT, () => {
   console.log('  GET  /api/admin/listings/cars');
   console.log('  POST /api/admin/listings/car');
   console.log('  GET  /api/admin/users');
+  console.log('  GET  /api/admin/top-properties (Analytics)');
+  console.log('  GET  /api/admin/city-revenue (Analytics)');
+  console.log('  GET  /api/admin/top-providers (Analytics)');
   console.log('========================================');
 });
 
