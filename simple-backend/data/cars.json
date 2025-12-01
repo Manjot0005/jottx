@@ -1,99 +1,642 @@
 [
   {
-    "car_id": "AB-12",
-    "car_type": "Economy",
-    "company_name": "Toyota",
-    "model": "Prius",
-    "year": "2025",
-    "transmission_type": "Automatic",
-    "seats": "5",
-    "daily_rental_price": "120",
-    "availability_status": "AVAILABLE",
-    "created_at": "2025-12-01T13:06:28.080Z",
-    "is_active": true
-  },
-  {
-    "car_id": "CAR-NY-001",
-    "car_type": "SUV",
-    "company_name": "Hertz",
+    "car_id": "CAR-SAN-898",
     "model": "Chevrolet Tahoe",
-    "year": "2024",
-    "transmission_type": "Automatic",
-    "seats": "7",
-    "daily_rental_price": "150",
-    "location": "New York",
-    "availability_status": "AVAILABLE",
-    "created_at": "2025-12-01T13:15:07.413Z",
-    "is_active": true
-  },
-  {
-    "car_id": "CAR-LA-001",
-    "car_type": "Convertible",
-    "company_name": "Enterprise",
-    "model": "Ford Mustang",
-    "year": "2025",
-    "transmission_type": "Automatic",
-    "seats": "4",
-    "daily_rental_price": "180",
-    "location": "Los Angeles",
-    "availability_status": "AVAILABLE",
-    "created_at": "2025-12-01T13:15:07.414Z",
-    "is_active": true
-  },
-  {
-    "car_id": "CAR-CHI-001",
-    "car_type": "Sedan",
-    "company_name": "Budget",
-    "model": "Honda Accord",
-    "year": "2024",
-    "transmission_type": "Automatic",
-    "seats": "5",
-    "daily_rental_price": "85",
-    "location": "Chicago",
-    "availability_status": "AVAILABLE",
-    "created_at": "2025-12-01T13:15:07.414Z",
-    "is_active": true
-  },
-  {
-    "car_id": "CAR-MIA-001",
-    "car_type": "Luxury",
-    "company_name": "Avis",
-    "model": "BMW 5 Series",
-    "year": "2025",
-    "transmission_type": "Automatic",
-    "seats": "5",
-    "daily_rental_price": "220",
-    "location": "Miami",
-    "availability_status": "AVAILABLE",
-    "created_at": "2025-12-01T13:15:07.414Z",
-    "is_active": true
-  },
-  {
-    "car_id": "CAR-SEA-001",
-    "car_type": "Economy",
-    "company_name": "Enterprise",
-    "model": "Nissan Versa",
-    "year": "2024",
-    "transmission_type": "Automatic",
-    "seats": "5",
-    "daily_rental_price": "65",
-    "location": "Seattle",
-    "availability_status": "AVAILABLE",
-    "created_at": "2025-12-01T13:15:07.414Z",
-    "is_active": true
-  },
-  {
-    "car_id": "CAR-SF-001",
-    "car_type": "Economy",
-    "company_name": "Budget",
-    "model": "Toyota Corolla",
-    "year": "2024",
-    "transmission_type": "Automatic",
-    "seats": "5",
-    "daily_rental_price": "75",
+    "car_type": "SUV",
+    "company": "Budget",
     "location": "San Francisco",
-    "availability_status": "AVAILABLE",
-    "created_at": "2025-12-01T13:15:07.414Z",
-    "is_active": true
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 4,
+    "transmission": "Manual",
+    "year": 2024,
+    "daily_price": 132.76,
+    "carsAvailable": 19,
+    "rating": 4.6
+  },
+  {
+    "car_id": "CAR-NEW-925",
+    "model": "Chevrolet Camaro",
+    "car_type": "Convertible",
+    "company": "Alamo",
+    "location": "New York",
+    "cities": [
+      "New York"
+    ],
+    "seats": 4,
+    "transmission": "Manual",
+    "year": 2023,
+    "daily_price": 72.85,
+    "carsAvailable": 7,
+    "rating": 3.8
+  },
+  {
+    "car_id": "CAR-SEA-650",
+    "model": "Honda Civic",
+    "car_type": "Economy",
+    "company": "Alamo",
+    "location": "Seattle",
+    "cities": [
+      "Seattle"
+    ],
+    "seats": 5,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 123.2,
+    "carsAvailable": 11,
+    "rating": 4.1
+  },
+  {
+    "car_id": "CAR-BOS-739",
+    "model": "BMW 5 Series",
+    "car_type": "Luxury",
+    "company": "Hertz",
+    "location": "Boston",
+    "cities": [
+      "Boston"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 101.4,
+    "carsAvailable": 5,
+    "rating": 4.4
+  },
+  {
+    "car_id": "CAR-NEW-935",
+    "model": "Audi A6",
+    "car_type": "Luxury",
+    "company": "Alamo",
+    "location": "New York",
+    "cities": [
+      "New York"
+    ],
+    "seats": 5,
+    "transmission": "Manual",
+    "year": 2023,
+    "daily_price": 111.06,
+    "carsAvailable": 7,
+    "rating": 4.5
+  },
+  {
+    "car_id": "CAR-NEW-660",
+    "model": "Honda Accord",
+    "car_type": "Sedan",
+    "company": "National",
+    "location": "New York",
+    "cities": [
+      "New York"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2024,
+    "daily_price": 247.84,
+    "carsAvailable": 13,
+    "rating": 3.7
+  },
+  {
+    "car_id": "CAR-NEW-828",
+    "model": "Toyota RAV4",
+    "car_type": "SUV",
+    "company": "National",
+    "location": "New York",
+    "cities": [
+      "New York"
+    ],
+    "seats": 4,
+    "transmission": "Automatic",
+    "year": 2022,
+    "daily_price": 209.28,
+    "carsAvailable": 6,
+    "rating": 5.0
+  },
+  {
+    "car_id": "CAR-LAS-539",
+    "model": "BMW 5 Series",
+    "car_type": "Luxury",
+    "company": "Hertz",
+    "location": "Las Vegas",
+    "cities": [
+      "Las Vegas"
+    ],
+    "seats": 8,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 78.26,
+    "carsAvailable": 19,
+    "rating": 3.7
+  },
+  {
+    "car_id": "CAR-MIA-664",
+    "model": "Chrysler Pacifica",
+    "car_type": "Van",
+    "company": "Hertz",
+    "location": "Miami",
+    "cities": [
+      "Miami"
+    ],
+    "seats": 4,
+    "transmission": "Automatic",
+    "year": 2022,
+    "daily_price": 63.58,
+    "carsAvailable": 17,
+    "rating": 4.7
+  },
+  {
+    "car_id": "CAR-SAN-829",
+    "model": "Ford Mustang",
+    "car_type": "Convertible",
+    "company": "National",
+    "location": "San Francisco",
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 5,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 108.15,
+    "carsAvailable": 15,
+    "rating": 4.2
+  },
+  {
+    "car_id": "CAR-SAN-448",
+    "model": "Toyota Sienna",
+    "car_type": "Van",
+    "company": "Avis",
+    "location": "San Francisco",
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 4,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 51.0,
+    "carsAvailable": 9,
+    "rating": 3.6
+  },
+  {
+    "car_id": "CAR-MIA-998",
+    "model": "Nissan Versa",
+    "car_type": "Economy",
+    "company": "Enterprise",
+    "location": "Miami",
+    "cities": [
+      "Miami"
+    ],
+    "seats": 4,
+    "transmission": "Automatic",
+    "year": 2024,
+    "daily_price": 90.07,
+    "carsAvailable": 9,
+    "rating": 3.8
+  },
+  {
+    "car_id": "CAR-NEW-471",
+    "model": "Honda Odyssey",
+    "car_type": "Van",
+    "company": "Alamo",
+    "location": "New York",
+    "cities": [
+      "New York"
+    ],
+    "seats": 4,
+    "transmission": "Manual",
+    "year": 2022,
+    "daily_price": 245.47,
+    "carsAvailable": 12,
+    "rating": 3.5
+  },
+  {
+    "car_id": "CAR-SEA-519",
+    "model": "Honda Odyssey",
+    "car_type": "Van",
+    "company": "Alamo",
+    "location": "Seattle",
+    "cities": [
+      "Seattle"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 158.38,
+    "carsAvailable": 8,
+    "rating": 4.1
+  },
+  {
+    "car_id": "CAR-MIA-937",
+    "model": "Honda Accord",
+    "car_type": "Sedan",
+    "company": "Avis",
+    "location": "Miami",
+    "cities": [
+      "Miami"
+    ],
+    "seats": 8,
+    "transmission": "Manual",
+    "year": 2025,
+    "daily_price": 187.85,
+    "carsAvailable": 7,
+    "rating": 4.9
+  },
+  {
+    "car_id": "CAR-CHI-277",
+    "model": "Toyota Camry",
+    "car_type": "Sedan",
+    "company": "Budget",
+    "location": "Chicago",
+    "cities": [
+      "Chicago"
+    ],
+    "seats": 4,
+    "transmission": "Manual",
+    "year": 2022,
+    "daily_price": 147.56,
+    "carsAvailable": 15,
+    "rating": 4.3
+  },
+  {
+    "car_id": "CAR-CHI-732",
+    "model": "Honda Civic",
+    "car_type": "Economy",
+    "company": "Alamo",
+    "location": "Chicago",
+    "cities": [
+      "Chicago"
+    ],
+    "seats": 5,
+    "transmission": "Manual",
+    "year": 2025,
+    "daily_price": 195.58,
+    "carsAvailable": 6,
+    "rating": 3.9
+  },
+  {
+    "car_id": "CAR-SAN-168",
+    "model": "Nissan Versa",
+    "car_type": "Economy",
+    "company": "Enterprise",
+    "location": "San Francisco",
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 8,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 75.64,
+    "carsAvailable": 10,
+    "rating": 4.5
+  },
+  {
+    "car_id": "CAR-BOS-121",
+    "model": "Mercedes E-Class",
+    "car_type": "Luxury",
+    "company": "Alamo",
+    "location": "Boston",
+    "cities": [
+      "Boston"
+    ],
+    "seats": 5,
+    "transmission": "Automatic",
+    "year": 2022,
+    "daily_price": 242.06,
+    "carsAvailable": 18,
+    "rating": 4.6
+  },
+  {
+    "car_id": "CAR-LOS-940",
+    "model": "Toyota Camry",
+    "car_type": "Sedan",
+    "company": "Enterprise",
+    "location": "Los Angeles",
+    "cities": [
+      "Los Angeles"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 113.01,
+    "carsAvailable": 20,
+    "rating": 3.5
+  },
+  {
+    "car_id": "CAR-LOS-398",
+    "model": "Honda Civic",
+    "car_type": "Economy",
+    "company": "Avis",
+    "location": "Los Angeles",
+    "cities": [
+      "Los Angeles"
+    ],
+    "seats": 8,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 134.86,
+    "carsAvailable": 10,
+    "rating": 3.8
+  },
+  {
+    "car_id": "CAR-CHI-297",
+    "model": "Honda Accord",
+    "car_type": "Sedan",
+    "company": "Budget",
+    "location": "Chicago",
+    "cities": [
+      "Chicago"
+    ],
+    "seats": 7,
+    "transmission": "Manual",
+    "year": 2025,
+    "daily_price": 149.05,
+    "carsAvailable": 17,
+    "rating": 4.6
+  },
+  {
+    "car_id": "CAR-NEW-752",
+    "model": "Nissan Altima",
+    "car_type": "Sedan",
+    "company": "Budget",
+    "location": "New York",
+    "cities": [
+      "New York"
+    ],
+    "seats": 7,
+    "transmission": "Manual",
+    "year": 2023,
+    "daily_price": 184.1,
+    "carsAvailable": 11,
+    "rating": 3.5
+  },
+  {
+    "car_id": "CAR-MIA-902",
+    "model": "Chrysler Pacifica",
+    "car_type": "Van",
+    "company": "Alamo",
+    "location": "Miami",
+    "cities": [
+      "Miami"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 129.5,
+    "carsAvailable": 7,
+    "rating": 4.8
+  },
+  {
+    "car_id": "CAR-CHI-389",
+    "model": "Chrysler Pacifica",
+    "car_type": "Van",
+    "company": "Avis",
+    "location": "Chicago",
+    "cities": [
+      "Chicago"
+    ],
+    "seats": 8,
+    "transmission": "Manual",
+    "year": 2022,
+    "daily_price": 155.26,
+    "carsAvailable": 17,
+    "rating": 4.3
+  },
+  {
+    "car_id": "CAR-BOS-649",
+    "model": "BMW 5 Series",
+    "car_type": "Luxury",
+    "company": "Budget",
+    "location": "Boston",
+    "cities": [
+      "Boston"
+    ],
+    "seats": 4,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 145.85,
+    "carsAvailable": 6,
+    "rating": 4.9
+  },
+  {
+    "car_id": "CAR-LOS-633",
+    "model": "Honda Odyssey",
+    "car_type": "Van",
+    "company": "Enterprise",
+    "location": "Los Angeles",
+    "cities": [
+      "Los Angeles"
+    ],
+    "seats": 4,
+    "transmission": "Automatic",
+    "year": 2024,
+    "daily_price": 53.7,
+    "carsAvailable": 19,
+    "rating": 4.6
+  },
+  {
+    "car_id": "CAR-NEW-620",
+    "model": "Nissan Altima",
+    "car_type": "Sedan",
+    "company": "Budget",
+    "location": "New York",
+    "cities": [
+      "New York"
+    ],
+    "seats": 8,
+    "transmission": "Automatic",
+    "year": 2022,
+    "daily_price": 104.44,
+    "carsAvailable": 11,
+    "rating": 4.8
+  },
+  {
+    "car_id": "CAR-SAN-132",
+    "model": "Toyota Camry",
+    "car_type": "Sedan",
+    "company": "Alamo",
+    "location": "San Francisco",
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 91.24,
+    "carsAvailable": 9,
+    "rating": 3.9
+  },
+  {
+    "car_id": "CAR-LAS-514",
+    "model": "Chevrolet Tahoe",
+    "car_type": "SUV",
+    "company": "Budget",
+    "location": "Las Vegas",
+    "cities": [
+      "Las Vegas"
+    ],
+    "seats": 4,
+    "transmission": "Manual",
+    "year": 2022,
+    "daily_price": 216.12,
+    "carsAvailable": 10,
+    "rating": 4.1
+  },
+  {
+    "car_id": "CAR-SAN-591",
+    "model": "Chevrolet Tahoe",
+    "car_type": "SUV",
+    "company": "National",
+    "location": "San Francisco",
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2022,
+    "daily_price": 173.68,
+    "carsAvailable": 9,
+    "rating": 4.3
+  },
+  {
+    "car_id": "CAR-SAN-470",
+    "model": "Honda Civic",
+    "car_type": "Economy",
+    "company": "Budget",
+    "location": "San Francisco",
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 8,
+    "transmission": "Manual",
+    "year": 2025,
+    "daily_price": 180.18,
+    "carsAvailable": 19,
+    "rating": 4.5
+  },
+  {
+    "car_id": "CAR-SEA-203",
+    "model": "Chevrolet Tahoe",
+    "car_type": "SUV",
+    "company": "Avis",
+    "location": "Seattle",
+    "cities": [
+      "Seattle"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 143.95,
+    "carsAvailable": 9,
+    "rating": 4.2
+  },
+  {
+    "car_id": "CAR-LAS-686",
+    "model": "Ford Explorer",
+    "car_type": "SUV",
+    "company": "Alamo",
+    "location": "Las Vegas",
+    "cities": [
+      "Las Vegas"
+    ],
+    "seats": 5,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 219.92,
+    "carsAvailable": 11,
+    "rating": 4.0
+  },
+  {
+    "car_id": "CAR-SAN-797",
+    "model": "Audi A6",
+    "car_type": "Luxury",
+    "company": "Hertz",
+    "location": "San Francisco",
+    "cities": [
+      "San Francisco"
+    ],
+    "seats": 4,
+    "transmission": "Automatic",
+    "year": 2022,
+    "daily_price": 134.04,
+    "carsAvailable": 18,
+    "rating": 4.6
+  },
+  {
+    "car_id": "CAR-BOS-632",
+    "model": "Mercedes E-Class",
+    "car_type": "Luxury",
+    "company": "Budget",
+    "location": "Boston",
+    "cities": [
+      "Boston"
+    ],
+    "seats": 7,
+    "transmission": "Manual",
+    "year": 2022,
+    "daily_price": 245.72,
+    "carsAvailable": 20,
+    "rating": 5.0
+  },
+  {
+    "car_id": "CAR-LOS-392",
+    "model": "Nissan Altima",
+    "car_type": "Sedan",
+    "company": "Budget",
+    "location": "Los Angeles",
+    "cities": [
+      "Los Angeles"
+    ],
+    "seats": 8,
+    "transmission": "Automatic",
+    "year": 2022,
+    "daily_price": 165.69,
+    "carsAvailable": 14,
+    "rating": 4.0
+  },
+  {
+    "car_id": "CAR-MIA-430",
+    "model": "Nissan Versa",
+    "car_type": "Economy",
+    "company": "National",
+    "location": "Miami",
+    "cities": [
+      "Miami"
+    ],
+    "seats": 5,
+    "transmission": "Automatic",
+    "year": 2025,
+    "daily_price": 64.1,
+    "carsAvailable": 18,
+    "rating": 4.6
+  },
+  {
+    "car_id": "CAR-MIA-790",
+    "model": "Toyota Camry",
+    "car_type": "Sedan",
+    "company": "Avis",
+    "location": "Miami",
+    "cities": [
+      "Miami"
+    ],
+    "seats": 7,
+    "transmission": "Automatic",
+    "year": 2023,
+    "daily_price": 244.66,
+    "carsAvailable": 17,
+    "rating": 3.7
+  },
+  {
+    "car_id": "CAR-MIA-769",
+    "model": "Toyota RAV4",
+    "car_type": "SUV",
+    "company": "Alamo",
+    "location": "Miami",
+    "cities": [
+      "Miami"
+    ],
+    "seats": 8,
+    "transmission": "Manual",
+    "year": 2024,
+    "daily_price": 72.51,
+    "carsAvailable": 18,
+    "rating": 4.6
   }
 ]
