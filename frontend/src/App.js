@@ -11,6 +11,7 @@ import Listings from './pages/Listings';
 import Users from './pages/Users';
 import Billing from './pages/Billing';
 import Analytics from './pages/Analytics';
+import ProviderPortal from './pages/ProviderPortal';
 
 const theme = createTheme({
   palette: {
@@ -31,6 +32,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/provider" element={<ProviderPortal />} />
             <Route
               path="/"
               element={
