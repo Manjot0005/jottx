@@ -101,8 +101,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('adminUser');
-    localStorage.removeItem('adminToken');
-    setAdmin(null);
+      localStorage.removeItem('adminToken');
+      setAdmin(null);
   };
 
   return (

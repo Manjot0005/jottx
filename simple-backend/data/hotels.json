@@ -52,5 +52,112 @@
     ],
     "created_at": "2025-12-01T13:01:51.539Z",
     "is_active": true
+  },
+  {
+    "hotel_id": "HTL-NY-002",
+    "hotel_name": "Manhattan Grand Hotel",
+    "address": "789 Broadway",
+    "city": "New York",
+    "state": "NY",
+    "zip_code": "10003",
+    "star_rating": "5",
+    "total_rooms": "150",
+    "available_rooms": "150",
+    "room_type": "Executive Suite",
+    "price_per_night": "450",
+    "amenities": [
+      "WiFi",
+      "Breakfast",
+      "Pool",
+      "Gym",
+      "Spa",
+      "Bar"
+    ],
+    "created_at": "2025-12-01T13:14:48.791Z",
+    "is_active": true
+  },
+  {
+    "hotel_id": "HTL-LA-001",
+    "hotel_name": "Beverly Hills Resort",
+    "address": "456 Sunset Blvd",
+    "city": "Los Angeles",
+    "state": "CA",
+    "zip_code": "90210",
+    "star_rating": "5",
+    "total_rooms": "200",
+    "available_rooms": "200",
+    "room_type": "Luxury Suite",
+    "price_per_night": "550",
+    "amenities": [
+      "WiFi",
+      "Breakfast",
+      "Pool",
+      "Gym",
+      "Spa",
+      "Valet"
+    ],
+    "created_at": "2025-12-01T13:14:48.792Z",
+    "is_active": true
+  },
+  {
+    "hotel_id": "HTL-CHI-001",
+    "hotel_name": "Chicago Downtown Inn",
+    "address": "123 Michigan Ave",
+    "city": "Chicago",
+    "state": "IL",
+    "zip_code": "60601",
+    "star_rating": "4",
+    "total_rooms": "120",
+    "available_rooms": "120",
+    "room_type": "Deluxe Room",
+    "price_per_night": "220",
+    "amenities": [
+      "WiFi",
+      "Breakfast",
+      "Gym"
+    ],
+    "created_at": "2025-12-01T13:14:48.792Z",
+    "is_active": true
+  },
+  {
+    "hotel_id": "HTL-MIA-002",
+    "hotel_name": "Ocean View Paradise",
+    "address": "789 Collins Ave",
+    "city": "Miami",
+    "state": "FL",
+    "zip_code": "33139",
+    "star_rating": "4",
+    "total_rooms": "90",
+    "available_rooms": "90",
+    "room_type": "Beach Suite",
+    "price_per_night": "320",
+    "amenities": [
+      "WiFi",
+      "Beach Access",
+      "Pool",
+      "Bar"
+    ],
+    "created_at": "2025-12-01T13:14:48.792Z",
+    "is_active": true
+  },
+  {
+    "hotel_id": "HTL-SEA-001",
+    "hotel_name": "Seattle Waterfront Hotel",
+    "address": "321 Pike St",
+    "city": "Seattle",
+    "state": "WA",
+    "zip_code": "98101",
+    "star_rating": "4",
+    "total_rooms": "100",
+    "available_rooms": "100",
+    "room_type": "Standard Room",
+    "price_per_night": "180",
+    "amenities": [
+      "WiFi",
+      "Breakfast",
+      "Gym"
+    ],
+    "created_at": "2025-12-01T13:14:48.792Z",
+    "is_active": true
   }
 ]
