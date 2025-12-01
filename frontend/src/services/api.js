@@ -52,8 +52,10 @@ export const listingsAPI = {
 
 // Users APIs
 export const usersAPI = {
-  getAll: (page = 1, limit = 50) => api.get(`/users?page=${page}&limit=${limit}`),
+  getAll: (page = 1, limit = 50, search = '') => 
+    api.get(`/users?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`),
   getById: (id) => api.get(`/users/${id}`),
+  create: (data) => api.post('/users', data),
   update: (id, data) => api.put(`/users/${id}`, data),
   delete: (id) => api.delete(`/users/${id}`),
 };

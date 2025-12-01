@@ -10,6 +10,9 @@ router.use(authenticate);
 // Get all users
 router.get('/', usersController.getAllUsers);
 
+// Create new user (admin and above)
+router.post('/', authorize('super_admin', 'admin'), usersController.createUser);
+
 // Get user by ID
 router.get('/:id', validateUserId, usersController.getUserById);
 

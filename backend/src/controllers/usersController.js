@@ -1,15 +1,16 @@
 const { mysqlPool } = require('../config/database');
 const ActivityLog = require('../models/ActivityLog');
 const { cacheHelper } = require('../config/redis');
+const bcrypt = require('bcryptjs');
 
 const usersController = {
-  // Get all users
+  // Get all users with optional search
   getAllUsers: async (req, res) => {
     try {
-      const { page = 1, limit = 50 } = req.query;
+      const { page = 1, limit = 50, search = '' } = req.query;
       const offset = (page - 1) * limit;
 
-      const cacheKey = `users:all:${page}:${limit}`;
+      const cacheKey = `users:all:${page}:${limit}:${search}`;
       const cached = await cacheHelper.get(cacheKey);
       
       if (cached) {
@@ -21,14 +22,28 @@ const usersController = {
         });
       }
 
+      let whereClause = '';
+      let queryParams = [];
+      
+      if (search) {
+        whereClause = `WHERE first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR phone_number LIKE ?`;
+        const searchTerm = `%${search}%`;
+        queryParams = [searchTerm, searchTerm, searchTerm, searchTerm];
+      }
+
       const [users] = await mysqlPool.query(
-        `SELECT user_id, first_name, last_name, email, city, state, phone_number, is_active, created_at 
+        `SELECT user_id, first_name, last_name, email, city, state, country, zipcode, phone_number, is_active, created_at 
          FROM users 
+         ${whereClause}
          ORDER BY created_at DESC 
-         LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`
+         LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`,
+        queryParams
       );
 
-      const [countResult] = await mysqlPool.query('SELECT COUNT(*) as total FROM users');
+      const [countResult] = await mysqlPool.query(
+        `SELECT COUNT(*) as total FROM users ${whereClause}`,
+        queryParams
+      );
       const total = countResult[0].total;
 
       const result = {
@@ -56,6 +71,92 @@ const usersController = {
         message: 'Failed to retrieve users',
         error: error.message
       });
+    }
+  },
+
+  // Create new user
+  createUser: async (req, res) => {
+    const connection = await mysqlPool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const { 
+        first_name, 
+        last_name, 
+        email, 
+        password, 
+        phone_number, 
+        city, 
+        state, 
+        country, 
+        zipcode,
+        is_active = true 
+      } = req.body;
+
+      // Validate required fields
+      if (!first_name || !last_name || !email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'First name, last name, email, and password are required'
+        });
+      }
+
+      // Check if email already exists
+      const [existing] = await connection.execute(
+        'SELECT user_id FROM users WHERE email = ?',
+        [email]
+      );
+
+      if (existing.length > 0) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: 'Email already registered'
+        });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Insert user
+      const [result] = await connection.execute(
+        `INSERT INTO users (first_name, last_name, email, password, phone_number, city, state, country, zipcode, is_active, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+        [first_name, last_name, email, hashedPassword, phone_number || null, city || null, state || null, country || null, zipcode || null, is_active ? 1 : 0]
+      );
+
+      await connection.commit();
+
+      // Invalidate cache
+      await cacheHelper.delPattern('users:all:*');
+
+      // Log activity
+      await ActivityLog.create({
+        admin_id: req.admin.admin_id,
+        action: 'CREATE_USER',
+        entity_type: 'USER',
+        entity_id: result.insertId,
+        details: { email, first_name, last_name },
+        ip_address: req.ip,
+        user_agent: req.get('user-agent'),
+        status: 'SUCCESS'
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'User created successfully',
+        data: { user_id: result.insertId }
+      });
+    } catch (error) {
+      await connection.rollback();
+      console.error('Create user error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to create user',
+        error: error.message
+      });
+    } finally {
+      connection.release();
     }
   },
 
@@ -141,9 +242,16 @@ const usersController = {
       }
 
       // Build update query
-      const allowedFields = ['first_name', 'last_name', 'email', 'phone_number', 'address', 'city', 'state', 'zip_code'];
+      const allowedFields = ['first_name', 'last_name', 'phone_number', 'address', 'city', 'state', 'country', 'zipcode', 'is_active'];
       const updateFields = [];
       const values = [];
+      
+      // Handle password separately
+      if (updates.password) {
+        const hashedPassword = await require('bcryptjs').hash(updates.password, 10);
+        updateFields.push('password = ?');
+        values.push(hashedPassword);
+      }
 
       for (const field of allowedFields) {
         if (updates[field] !== undefined) {
